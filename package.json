@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/avivzeh/smart-partion#readme",
   "devDependencies": {
+    "eslint": "^7.27.0",
     "nodemon": "^2.0.7"
   }
 }
