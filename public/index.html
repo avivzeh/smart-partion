@@ -21,7 +21,6 @@
           <!-- firebase-ui-auth -->
     <script src="https://www.gstatic.com/firebasejs/ui/4.8.0/firebase-ui-auth.js"></script>
     <link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/4.8.0/firebase-ui-auth.css" />
-
     <script defer src="/__/firebase/init.js?useEmulator=true"></script>
 
     <style media="screen">
@@ -93,15 +92,15 @@
 	var uiConfig = {
 		callbacks: {
 			signInSuccessWithAuthResult: function(authResult, redirectUrl) {
-      // User successfully signed in.
-      // Return type determines whether we continue the redirect automatically
-      // or whether we leave that to developer to handle.
-      return true;
+      				// User successfully signed in.
+      				// Return type determines whether we continue the redirect automatically
+      				// or whether we leave that to developer to handle.
+      				return true;
 			},
 			uiShown: function() {
-      // The widget is rendered.
-      // Hide the loader.
-      document.getElementById('loader').style.display = 'none';
+      				// The widget is rendered.
+      				// Hide the loader.
+      				document.getElementById('loader').style.display = 'none';
 			}
 		},
 		// Will use popup for IDP Providers sign-in flow instead of the default, redirect.
@@ -145,9 +144,9 @@
       					getCourses();
 				} else {
 
-      users.doc(uid).set({
+      					users.doc(uid).set({
       						init: false
-      });
+      					});
       					// doc.data() will be undefined in this case
       					document.getElementById('welcome').style.display = 'block'; 
       					document.getElementById('first-login').style.display = 'block';
@@ -192,9 +191,9 @@
       				// Sign-out successful.
       			})
       			.catch(function(error) {
-      				// An error happened
+      				console.log(error);// An error happened
       			});
-      });
+      	});
 
       	let addButton = document.getElementById('button-add');
 
