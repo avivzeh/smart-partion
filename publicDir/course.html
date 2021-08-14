@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylecss.css">
+    <title>Welcome to Firebase Hosting</title>
+    <!-- update the version number as needed -->
+    <script defer src="/__/firebase/8.6.7/firebase-app.js"></script>
+    <!-- include only the Firebase features as you need -->
+    <script defer src="/__/firebase/8.6.7/firebase-auth.js"></script>
+    <script defer src="/__/firebase/8.6.7/firebase-database.js"></script>
+    <script defer src="/__/firebase/8.6.7/firebase-firestore.js"></script>
+    <script defer src="/__/firebase/8.6.7/firebase-functions.js"></script>
+    <script defer src="/__/firebase/8.6.7/firebase-messaging.js"></script>
+    <script defer src="/__/firebase/8.6.7/firebase-storage.js"></script>
+    <script defer src="/__/firebase/8.6.7/firebase-analytics.js"></script>
+    <script defer src="/__/firebase/8.6.7/firebase-remote-config.js"></script>
+    <script defer src="/__/firebase/8.6.7/firebase-performance.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"
+        integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ=="
+        crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+        integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <!-- firebase-ui-auth -->
+    <script src="https://www.gstatic.com/firebasejs/ui/4.8.0/firebase-ui-auth.js"></script>
+    <link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/4.8.0/firebase-ui-auth.css" />
+    <script defer src="/__/firebase/init.js?useEmulator=true"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style media="screen">
+        body {
+            background-image: url("https://img.freepik.com/free-photo/abstract-grunge-decorative-relief-navy-blue-stucco-wall-texture-wide-angle-rough-colored-background_1258-28311.jpg?size=626&ext=jpg&ga=GA1.2.1937619873.1628553600");
+            background-repeat: repeat;
+        }
+
+        #welcome,
+        #name,
+        #courses-header,
+        #courses {
+            font-family: "Trirong", serif;
+            text-shadow: 2px 2px 2px #000000;
+            font-size: 30px;
+            margin-top: 15px;
+            color: rgb(255, 230, 184);
+        }
+
+        #first-login {
+            text-shadow: 2px 2px 2px #000000;
+            font-size: 30px;
+            margin-top: 15px;
+            color: rgb(255, 230, 184);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container col-md-8 offset-md-2 mb-5 mt-3" style="padding: 0%;">
+        <div style="background-color: white; margin-top: 15px; height: 150px; ">
+            <img src="static-assets/logo.png"
+                style="border-radius: 5px; width:210px; height: 165px; margin: 10px; margin-bottom: 20px;">
+        </div>
+
+        <div class="topnav">
+            <a id="home" href="/">Home</a>
+            <a id="profile" href="#">My Profile</a>
+            <a id="addq" style="display: none;" href="#">Add a questionnaire</a>
+            <a id="logout" href="">Logout</a>
+            <div class="search-container">
+                <form id="search-form" style="display: none;">
+                    <input id="search" type="text" placeholder="Search student to add...">
+                    <button id="search-btn"><i class="fa fa-search"></i></button>
+                </form>
+            </div>
+        </div>
+        <h1 id="name"></h1>
+        <div id="search-result" class="row mx-auto" style="display: inline; "></div>
+
+        <div>
+            <h1 id="courses-header" style="display: none;">My Courses </h1>
+        </div>
+
+        <div id="courses" class="row mx-auto" style="display: inline; "></div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+
+        	// eslint-disable-next-line no-undef
+        	const db = firebase.firestore();
+        	var myUrl = document.URL; // url of this page
+        	var id = myUrl.split('=')[1];  // get the post id from this url 
+        	db.collection('courses').doc(id).get().then(doc => {
+        		document.getElementById('name').innerHTML += doc.data().name;
+        	});
+        	var users = db.collection('users');
+        	// eslint-disable-next-line no-undef
+        	firebase.auth().onAuthStateChanged((user) => {
+
+        		if (user) {
+        			// User is signed in, see docs for a list of available properties
+        			// https://firebase.google.com/docs/reference/js/firebase.User
+
+        			users.doc(user.uid).get().then((u) => {
+        				if (u.data().teacher) {
+        					document.getElementById('addq').style.display = 'block';
+        					document.getElementById('search-form').style.display = 'block';
+        				}
+        			});
+
+        		} else {
+        			// User is signed out
+        			location.href = '/';  // refresh the page
+        		}
+
+        		// logout button
+        		let logoutBtn = document.getElementById('logout');
+
+        		logoutBtn.addEventListener('click', function () {
+        			// eslint-disable-next-line no-undef
+        			firebase.auth().signOut()
+        				.then(function () {
+        					// Sign-out successful.
+        					location.href = '/';
+        				})
+        				.catch(function (error) {
+        					console.log(error);// An error happened
+        				});
+        		});
+
+        		const searchButton = document.getElementById('search-btn');
+        		searchButton.addEventListener('click', async (e) => {
+        			var search = document.getElementById('search').value.trim().toLowerCase();
+        			e.preventDefault();
+        			document.getElementById('search-result').innerHTML = '';
+
+        			if (search == '')
+        				return;
+        			else {  // add post to database
+        				var strlength = search.length;
+        				var strFrontCode = search.slice(0, strlength - 1);
+        				var strEndCode = search.slice(strlength - 1, search.length);
+
+        				var startcode = search;
+        				var endcode = strFrontCode + String.fromCharCode(strEndCode.charCodeAt(0) + 1);
+
+        				var result = db.collection('users').where('nameUpper', '>=', startcode.toUpperCase())
+        					.where('nameUpper', '<', endcode.toUpperCase()).where('teacher','==',false);
+        				await result.get().then((querySnapshot) => {  // for each post
+        					querySnapshot.forEach(async (doc) => {
+
+        						// if the user was found already got a request from this teacher display to hom a sent state
+        						var requests = await db.collection('requests').where('from', '==', user.uid).where('course', '==', id).where('to', '==', doc.id).get();
+
+        						if (!requests.empty) {
+        							document.getElementById('search-result').innerHTML += `<div id='${doc.id}' style=" background-color:white;
+                                    width:fit-content; padding: 5px; border-style: groove; border-radius: 3px; margin-top: 3px;">
+                                    <a>${doc.data().name}</a></br>
+                                    <a>${doc.data().email}</a>
+                                    <button style="margin-left: 5px;" onclick="firebase.firestore().collection('requests')
+                                    .where('from', '==', '${user.uid}').where('course', '==', '${id}').where('to', '==', '${doc.id}').get().then((querySnapshot) => { 
+                                        querySnapshot.forEach((req) => {
+                                        firebase.firestore().collection('requests').doc(req.id).delete(); }); });
+                                    
+                                    document.getElementById('${doc.id}').style.display = 'none';">Cancel Request</button></div >`;
+        						} else {
+        							// req.data() will be undefined in this case
+        							document.getElementById('search-result').innerHTML += `<div id='send-${doc.id}' style=" background-color:white; width:fit-content;
+                                     padding: 5px; border-style: groove; border-radius: 3px; margin-top: 3px;">
+                                    <a>${doc.data().name}</a></br>
+                                    <a>${doc.data().email}</a>
+                                    <button style="margin-left: 5px;" onclick="firebase.firestore().collection('requests').add({ from: '${user.uid}',
+                                     to: '${doc.id}', course:'${id}' });
+                                     document.getElementById('send-${doc.id}').style.display = 'none' " >Send Request</button>
+                                     </div >`;
+        						}
+        					});
+        				});
+        			}
+        		});
+        	});
+        });
+
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,463 @@
+/* eslint-disable no-undef */
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" type="text/css" href="stylecss.css">
+	<title>SmartPartition</title>
+	<!-- update the version number as needed -->
+	<script defer src="/__/firebase/8.6.7/firebase-app.js"></script>
+	<!-- include only the Firebase features as you need -->
+	<script defer src="/__/firebase/8.6.7/firebase-auth.js"></script>
+	<script defer src="/__/firebase/8.6.7/firebase-database.js"></script>
+	<script defer src="/__/firebase/8.6.7/firebase-firestore.js"></script>
+	<script defer src="/__/firebase/8.6.7/firebase-functions.js"></script>
+	<script defer src="/__/firebase/8.6.7/firebase-messaging.js"></script>
+	<script defer src="/__/firebase/8.6.7/firebase-storage.js"></script>
+	<script defer src="/__/firebase/8.6.7/firebase-analytics.js"></script>
+	<script defer src="/__/firebase/8.6.7/firebase-remote-config.js"></script>
+	<script defer src="/__/firebase/8.6.7/firebase-performance.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"
+		integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ=="
+		crossorigin="anonymous"></script>
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+		integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+	<!-- firebase-ui-auth -->
+	<script src="https://www.gstatic.com/firebasejs/ui/4.8.0/firebase-ui-auth.js"></script>
+	<link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/4.8.0/firebase-ui-auth.css" />
+	<script defer src="/__/firebase/init.js?useEmulator=true"></script>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+	<style media="screen">
+		body {
+			background-image: url("https://img.freepik.com/free-photo/abstract-grunge-decorative-relief-navy-blue-stucco-wall-texture-wide-angle-rough-colored-background_1258-28311.jpg?size=626&ext=jpg&ga=GA1.2.1937619873.1628553600");
+			background-repeat: repeat;
+		}
+
+		#welcome,
+		#courses-header,
+		#courses {
+			font-family: "Trirong", serif;
+			text-shadow: 2px 2px 2px #000000;
+			font-size: 30px;
+			margin-top: 15px;
+			color: rgb(255, 230, 184);
+		}
+
+		#first-login {
+			text-shadow: 2px 2px 2px #000000;
+			font-size: 30px;
+			margin-top: 15px;
+			color: rgb(255, 230, 184);
+		}
+	</style>
+</head>
+
+<body>
+	<div class="container col-md-8 offset-md-2 mb-5 mt-3" style="padding: 0%;">
+		<div style="background-color: white; margin-top: 15px; height: 150px; ">
+			<img src="static-assets/logo.png"
+				style="border-radius: 5px; width:210px; height: 165px; margin: 10px; margin-bottom: 20px;">
+		</div>
+
+		<div class="topnav">
+			<a id="home" style="display: none;" href="/">Home</a>
+			<a id="profile" style="display: none;" href="#">My Profile</a>
+			<a id="addCourse" style="display: none;" href="#">Add course</a>
+			<a id="logout" style="display: none;" href="">Logout</a>
+			<div class="search-container">
+				<form id="search-form" style="display: none;">
+					<input id="search" type="text" placeholder="Search student to add...">
+					<button id="search-btn"><i class="fa fa-search"></i></button>
+				</form>
+			</div>
+		</div>
+
+		<div id="header">
+			<p id="welcome"></p>
+			<div id="loader">Loading...</div>
+		</div>
+		<div>
+			<h1 id="courses-header" style="display: none;">My Courses </h1>
+		</div>
+
+
+		<div id="firebaseui-auth-container" style="display: none;"></div>
+
+		<div class="row mt-2">
+			<div class="col-12 ">
+				<form id="add-course" class="container container-atrr" style="display: none;">
+					<h3 style="font-family: Lobster; margin-top: 8px; color: wheat;">Add Course</h3>
+					<div class="form-group" style="margin-top: 10px; ">
+						<input class="form-control" id="course-name" placeholder="Course Name">
+						<div id="invalid" class="invalid-feedback"></div>
+					</div>
+
+					<div style="display:flex;">
+						<button type="submit" id="submit-new-course" class="btn btn-primary">Add Course</button>
+					</div>
+				</form>
+			</div>
+		</div>
+
+		<div class="row">
+			<div id="first-login" class="col-5 container-atrr">
+				<form class="container">
+					<p>
+					<div>Use this account as</div>
+					<input type="radio" id="student" name="role" value="student">
+					<label for="student">Student</label><br>
+					<input type="radio" id="teacher" name="role" value="teacher">
+					<label for="teacher">Teacher</label><br>
+					<button id="button-init" class="btn btn-primary">Submit</button>
+					<div id="invalid" class="invalid-feedback"></div>
+					</p>
+				</form>
+			</div>
+		</div>
+
+		<div id="search-result" class="row mx-auto" style="display: inline; "></div>
+
+		<div id="courses" class="row mx-auto" style="display: inline; "></div>
+
+		<div id="requests" class="row mx-auto" style="display: inline; "></div>
+	</div>
+	<script>
+		document.addEventListener('DOMContentLoaded', function () {
+			//	const loadEl = document.querySelector('#load');
+			// // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
+			// // The Firebase SDK is initialized and available here!
+			//
+			// firebase.auth().onAuthStateChanged(user => { });
+			// firebase.database().ref('/path/to/ref').on('value', snapshot => { });
+			// firebase.firestore().doc('/foo/bar').get().then(() => { });
+			// firebase.functions().httpsCallable('yourFunction')().then(() => { });
+			// firebase.messaging().requestPermission().then(() => { });
+			// firebase.storage().ref('/path/to/ref').getDownloadURL().then(() => { });
+			// firebase.analytics(); // call to activate
+			// firebase.analytics().logEvent('tutorial_completed');
+			// firebase.performance(); // call to activate
+			//
+			// // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
+
+			// eslint-disable-next-line no-undef
+			var ui = new firebaseui.auth.AuthUI(firebase.auth());
+
+			var uiConfig = {
+				callbacks: {
+					// eslint-disable-next-line no-unused-vars
+					signInSuccessWithAuthResult: function (authResult, redirectUrl) {
+						// User successfully signed in.
+						// Return type determines whether we continue the redirect automatically
+						// or whether we leave that to developer to handle.
+						return true;
+					},
+					uiShown: function () {
+						// The widget is rendered.
+						// Hide the loader.
+						document.getElementById('loader').style.display = 'none';
+					}
+				},
+				// Will use popup for IDP Providers sign-in flow instead of the default, redirect.
+				signInFlow: 'popup',
+				signInSuccessUrl: '/',
+				signInOptions: [
+					// Leave the lines as is for the providers you want to offer your users.
+					// eslint-disable-next-line no-undef
+					firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+					// eslint-disable-next-line no-undef
+					firebase.auth.EmailAuthProvider.PROVIDER_ID
+				],
+				// Terms of service url.
+				tosUrl: '',
+				// Privacy policy url.
+				privacyPolicyUrl: ''
+			};
+
+			// The start method will wait until the DOM is loaded.
+			ui.start('#firebaseui-auth-container', uiConfig);
+			// eslint-disable-next-line no-undef
+			const db = firebase.firestore();
+			var users = db.collection('users');
+			// eslint-disable-next-line no-undef
+			firebase.auth().onAuthStateChanged((user) => {
+
+				if (user) {
+					// User is signed in, see docs for a list of available properties
+					// https://firebase.google.com/docs/reference/js/firebase.User
+
+					var uid = user.uid;
+					document.getElementById('welcome').innerHTML = `Welcome, ${user.displayName}</br>`;
+					users.doc(uid).get().then((u) => {
+						if (u.data().student) {
+							document.getElementById('welcome').innerHTML += 'Student Account';
+							document.getElementById('search-form').style.display = 'block';
+						}
+						else
+							document.getElementById('welcome').innerHTML += 'Teacher Account';
+					});
+					document.getElementById('welcome').style.display = 'block';
+					document.getElementById('firebaseui-auth-container').style.display = 'none';
+					document.getElementById('home').style.display = 'block';
+					document.getElementById('logout').style.display = 'block';
+					users.doc(uid).get().then((doc) => {
+						if (doc.exists && (!doc.data().init == false || doc.data().init == undefined)) {
+
+							document.getElementById('profile').style.display = 'block';
+							document.getElementById('welcome').style.display = 'block';
+							document.getElementById('courses-header').style.display = 'block';
+							document.getElementById('courses').style.display = 'block';
+							if (doc.data().teacher == true) {
+								document.getElementById('addCourse').style.display = 'block';
+								getCoursesForTeacher();
+							} else
+								getCoursesForStudent();
+							getRequests();
+						} else {  // first login
+
+							users.doc(uid).set({
+								init: false
+							});
+							// doc.data() will be undefined in this case
+							document.getElementById('first-login').style.display = 'block';
+						}
+					}).catch((error) => {
+						console.log('Error getting document:', error);
+					});
+
+				} else {
+					// User is signed out
+					document.getElementById('first-login').style.display = 'none';
+					document.getElementById('profile').style.display = 'none';
+					document.getElementById('logout').style.display = 'none';
+					document.getElementById('welcome').style.display = 'none';
+					document.getElementById('search-form').style.display = 'none';
+					document.getElementById('courses').style.display = 'none';
+					document.getElementById('firebaseui-auth-container').style.display = 'block';
+				}
+
+				// logout button
+				let logoutBtn = document.getElementById('logout');
+
+				logoutBtn.addEventListener('click', function () {
+					// eslint-disable-next-line no-undef
+					firebase.auth().signOut()
+						.then(function () {
+							// Sign-out successful.
+						})
+						.catch(function (error) {
+							console.log(error);// An error happened
+						});
+				});
+
+				let addCourseRef = document.getElementById('addCourse');
+				addCourseRef.onclick = function () {
+					document.getElementById('add-course').style.display = 'block';
+
+				};
+
+				let initButton = document.getElementById('button-init');
+				initButton.addEventListener('click', function (e) {
+
+					// eslint-disable-next-line no-undef
+					if (document.getElementById('student').checked == true) {
+						users.doc(user.uid).set({
+							name: user.displayName,
+							nameUpper: user.displayName.toUpperCase(),
+							email: user.email,
+							teacher: false,
+							student: true
+						});
+
+						document.getElementById('first-login').style.display = 'none';
+						document.getElementById('profile').style.display = 'block';
+						document.getElementById('logout').style.display = 'block';
+						document.getElementById('welcome').style.display = 'block';
+						document.getElementById('courses').style.display = 'block';
+						document.getElementById('courses-header').style.display = 'block';
+						// eslint-disable-next-line no-undef
+						$('#invalid').hide();
+					}
+					else {
+						if (document.getElementById('teacher').checked == true) {
+							users.doc(user.uid).set({
+								name: user.displayName,
+								email: user.email,
+								teacher: true,
+								student: false
+							});
+
+							document.getElementById('first-login').style.display = 'none';
+							document.getElementById('profile').style.display = 'block';
+							document.getElementById('logout').style.display = 'block';
+							document.getElementById('welcome').style.display = 'block';
+							document.getElementById('courses').style.display = 'block';
+							document.getElementById('addCourse').style.display = 'block';
+							document.getElementById('courses-header').style.display = 'block';
+							// eslint-disable-next-line no-undef
+							$('#invalid').hide();
+						}
+						else {
+							// eslint-disable-next-line no-undef
+							$('#invalid').html('Please select your role...');
+							// eslint-disable-next-line no-undef
+							$('#invalid').show();
+						}
+					}
+
+					e.preventDefault();
+				});
+
+				const publishButton = document.getElementById('submit-new-course');
+				publishButton.addEventListener('click', (e) => {
+
+					var courseName = document.getElementById('course-name').value.trim();
+					var courses = db.collection('courses');
+					if (courseName == '') {
+						// eslint-disable-next-line no-undef
+						$('#invalid').html('Content is required...');
+						// eslint-disable-next-line no-undef
+						$('#invalid').show();
+						e.preventDefault();
+					} else {  // add post to database
+						// eslint-disable-next-line no-undef
+						$('#invalid').hide();
+
+						courses.add({  // add the post to posts collection
+							name: courseName,
+							nameUpper: courseName.toUpperCase(),
+							questionnaires: [],
+							students: [],
+							teacher: user.uid,
+						}).catch(() => {
+							//  alert("Error adding post: ", error);
+						});
+						e.preventDefault();
+						document.getElementById('add-course').style.display = 'none';
+						setTimeout(function () { alert('Course was added successfully'); }, 400);
+					}
+				});
+
+				const searchButton = document.getElementById('search-btn');
+				searchButton.addEventListener('click', async (e) => {
+					var search = document.getElementById('search').value.trim().toLowerCase();
+					e.preventDefault();
+					document.getElementById('search-result').innerHTML = '';
+
+					if (search == '')
+						return;
+					else {  // add post to database
+						var strlength = search.length;
+						var strFrontCode = search.slice(0, strlength - 1);
+						var strEndCode = search.slice(strlength - 1, search.length);
+
+						var startcode = search;
+						var endcode = strFrontCode + String.fromCharCode(strEndCode.charCodeAt(0) + 1);
+
+						var result = db.collection('courses').where('nameUpper', '>=', startcode.toUpperCase())
+							.where('nameUpper', '<', endcode.toUpperCase());
+						await result.get().then((querySnapshot) => {  // for each post
+							querySnapshot.forEach(async (course) => {
+
+								// if the teacher was found already got a request from this teacher display to him a sent state
+								var requests = await db.collection('requests').where('from', '==', user.uid).where('to', '==', course.data().teacher).
+									where('course', '==', course.id).get();
+
+								if (!requests.empty) { // request was sent for this course
+									db.collection('users').doc(course.data().teacher).get().then( u => {  // get the teacher
+										document.getElementById('search-result').innerHTML += `<div id='${course.id}' style=" background-color:white;
+										width:fit-content; padding: 5px; border-style: groove; border-radius: 3px; margin-top: 3px;">
+										<a>${course.data().name}</a></br> 
+										<a>Teacher: ${u.data().name}</a></br>
+										<a>${u.data().email}</a>
+										<button style="margin-left: 5px;" onclick="firebase.firestore().collection('requests')
+										.where('from', '==', '${user.uid}').where('course', '==', '${course.id}').where('to', '==', '${course.data().teacher}').get().then((querySnapshot) => { 
+											querySnapshot.forEach((req) => {
+											firebase.firestore().collection('requests').doc(req.id).delete(); }); });
+										
+										document.getElementById('${course.id}').style.display = 'none';">Cancel Request</button></div >`;
+									});
+
+								} else {
+									// req.data() will be undefined in this case
+									db.collection('users').doc(course.data().teacher).get().then( u => {  // get the teacher
+										document.getElementById('search-result').innerHTML += `<div id='${course.id}' style=" background-color:white;
+										width:fit-content; padding: 5px; border-style: groove; border-radius: 3px; margin-top: 3px;">
+										<a>${course.data().name}</a></br> 
+										<a>Teacher: ${u.data().name}</a></br>
+										<a>${u.data().email}</a>
+										<button style="margin-left: 5px;" onclick="firebase.firestore().collection('requests').add({ from: '${user.uid}',
+                                    	to: '${course.data().teacher}', course:'${course.id}' });
+										
+										document.getElementById('${course.id}').style.display = 'none';">Send Request</button></div >`;
+									});
+								}
+							});
+						});
+					}
+				});
+
+				async function getCoursesForStudent() {
+
+					// document.getElementById("courses").innerHTML="";
+					// eslint-disable-next-line no-undef
+
+					await db.collection('courses').where('students', 'array-contains', user.uid).get().then((querySnapshot) => {
+						querySnapshot.forEach((doc) => {
+
+							document.getElementById('courses').innerHTML += `<a href="course.html?doc=${doc.id}" style="color: inherit;">${doc.data().name}</a></br> `;
+
+						});
+					});
+				}
+				async function getCoursesForTeacher() {
+
+					// document.getElementById("courses").innerHTML="";
+					// eslint-disable-next-line no-undef
+
+					await db.collection('courses').where('teacher', '==', user.uid).get().then((querySnapshot) => {
+						querySnapshot.forEach((doc) => {
+
+							document.getElementById('courses').innerHTML += `<a href="course.html?doc=${doc.id}" style="color: inherit;">${doc.data().name}</a></br> `;
+
+						});
+					});
+				}
+
+				async function getRequests() {
+
+					await db.collection('requests').where('to', '==', user.uid).get().then((querySnapshot) => {
+						querySnapshot.forEach(async (req) => { // each request
+							await db.collection('users').doc(req.data().from).get().then(async (u) => { // the user who sent the request
+								await db.collection('courses').doc(req.data().course).get().then(c => {  // the course of the request
+									document.getElementById('requests').innerHTML += `<div id="${req.id}" style=" background-color:white; width:fit-content;
+                                     padding: 5px; border-style: groove; border-radius: 3px; margin-top: 3px;">
+                                    <a>Request From: ${u.data().name}</a></br>
+                                    <a>${u.data().email}</a>
+									<p>For Joinning To: ${c.data().name} </p>
+									<div style=" display: flex; padding: 5px; border-style: groove; border-radius: 3px; margin-top: 3px;">
+                                    <button id='send-${u.id}' style="margin-left: 5px;" onclick="firebase.firestore().collection('courses').doc('${req.data().course}')
+									 .update({ students: firebase.firestore.FieldValue.arrayUnion('${user.uid}') });
+									 firebase.firestore().collection('requests').doc('${req.id}').delete();
+                                     document.getElementById('${req.id}').style.display = 'none'; " >Accept</button>
+									 <button id='send-${u.id}' style="margin-left: 5px;" onclick="
+									 firebase.firestore().collection('requests').doc('${req.id}').delete();
+                                     document.getElementById('${req.id}').style.display = 'none'; ">Decline</button>
+                                     </div>`;
+								});
+							});
+						});
+
+					});
+				}
+
+			});
+		});
+
+
+	</script>
+</body>
+
+</html>
