@@ -1,4 +1,3 @@
-/* eslint-disable no-undef */
 <!DOCTYPE html>
 <html>
 
@@ -74,13 +73,13 @@
 				</form>
 			</div>
 		</div>
-
+		<div>
+			<button type="submit" id="show-courses" class="btn-group-toggle" style="display: none;">Show/Hide All
+				Courses</button>
+		</div>
 		<div id="header">
 			<p id="welcome"></p>
 			<div id="loader">Loading...</div>
-		</div>
-		<div>
-			<h1 id="courses-header" style="display: none;">My Courses </h1>
 		</div>
 
 
@@ -100,6 +99,31 @@
 					</div>
 				</form>
 			</div>
+		</div>
+
+
+		<div id="All" class="row mx-auto" style="display: inline; ">
+			<div class="row mt-2">
+				<div class="col-12 ">
+					<form id="All-Courses" class="container container-atrr" style="display: none;">
+						<h3 style="font-family: Lobster; margin-top: 8px; color: wheat;">All Courses</h3>
+						<div id="Allcourses" class="form-group" style="margin-top: 10px; color: wheat; ">
+
+						</div>
+						<div style="display:flex;">
+							<button type="submit" id="choose-course" class="btn btn-primary">Choose Course</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+
+
+
+
+
+		<div>
+			<h1 id="courses-header" style="display: none;">My Courses </h1>
 		</div>
 
 		<div class="row">
@@ -204,7 +228,6 @@
 					document.getElementById('logout').style.display = 'block';
 					users.doc(uid).get().then((doc) => {
 						if (doc.exists && (!doc.data().init == false || doc.data().init == undefined)) {
-
 							document.getElementById('profile').style.display = 'block';
 							document.getElementById('welcome').style.display = 'block';
 							document.getElementById('courses-header').style.display = 'block';
@@ -212,8 +235,35 @@
 							if (doc.data().teacher == true) {
 								document.getElementById('addCourse').style.display = 'block';
 								getCoursesForTeacher();
-							} else
+							} else {
+								var show = document.getElementById('show-courses');
+								show.style.display = 'block';
+								show.addEventListener('click', function (e) {
+									if (document.getElementById('All-Courses').style.display === 'none') {
+										document.getElementById('All-Courses').style.display = 'block';
+										getAllCourses();
+									} else
+										document.getElementById('All-Courses').style.display = 'none';
+									e.preventDefault();
+								});
 								getCoursesForStudent();
+
+
+								var chooseCourse = document.getElementById('choose-course');
+								chooseCourse.addEventListener('click', function (e) {
+									// eslint-disable-next-line no-undef
+									if ($('input[type=\'radio\'][name=\'courseChoosen\']:checked').val()) {
+										// eslint-disable-next-line no-undef
+										db.collection('courses').doc($('input[type=\'radio\'][name=\'courseChoosen\']:checked').val()).update({
+											// eslint-disable-next-line no-undef
+											students: firebase.firestore.FieldValue.arrayUnion(uid)
+										});
+									}
+									else
+										e.preventDefault();
+								});
+
+							}
 							getRequests();
 						} else {  // first login
 
@@ -311,7 +361,7 @@
 				});
 
 				const publishButton = document.getElementById('submit-new-course');
-				publishButton.addEventListener('click', (e) => {
+				publishButton.addEventListener('click', () => {
 
 					var courseName = document.getElementById('course-name').value.trim();
 					var courses = db.collection('courses');
@@ -320,7 +370,6 @@
 						$('#invalid').html('Content is required...');
 						// eslint-disable-next-line no-undef
 						$('#invalid').show();
-						e.preventDefault();
 					} else {  // add post to database
 						// eslint-disable-next-line no-undef
 						$('#invalid').hide();
@@ -334,7 +383,6 @@
 						}).catch(() => {
 							//  alert("Error adding post: ", error);
 						});
-						e.preventDefault();
 						document.getElementById('add-course').style.display = 'none';
 						setTimeout(function () { alert('Course was added successfully'); }, 400);
 					}
@@ -366,7 +414,7 @@
 									where('course', '==', course.id).get();
 
 								if (!requests.empty) { // request was sent for this course
-									db.collection('users').doc(course.data().teacher).get().then( u => {  // get the teacher
+									db.collection('users').doc(course.data().teacher).get().then(u => {  // get the teacher
 										document.getElementById('search-result').innerHTML += `<div id='${course.id}' style=" background-color:white;
 										width:fit-content; padding: 5px; border-style: groove; border-radius: 3px; margin-top: 3px;">
 										<a>${course.data().name}</a></br> 
@@ -382,7 +430,7 @@
 
 								} else {
 									// req.data() will be undefined in this case
-									db.collection('users').doc(course.data().teacher).get().then( u => {  // get the teacher
+									db.collection('users').doc(course.data().teacher).get().then(u => {  // get the teacher
 										document.getElementById('search-result').innerHTML += `<div id='${course.id}' style=" background-color:white;
 										width:fit-content; padding: 5px; border-style: groove; border-radius: 3px; margin-top: 3px;">
 										<a>${course.data().name}</a></br> 
@@ -398,6 +446,16 @@
 						});
 					}
 				});
+
+				async function getAllCourses() {
+					document.getElementById('Allcourses').innerHTML = '';
+					await db.collection('courses').get().then((querySnapshot) => {
+						querySnapshot.forEach((doc) => {
+							document.getElementById('Allcourses').innerHTML += `<input type="radio" name="courseChoosen" value="${doc.id}">
+							<label for="${doc.data().name}">${doc.data().name}</label><br>`;
+						});
+					});
+				}
 
 				async function getCoursesForStudent() {
 

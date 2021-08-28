@@ -1,3 +1,5 @@
+/* eslint-disable no-undef */
+/* eslint-disable no-undef */
 <!DOCTYPE html>
 <html>
 
@@ -36,6 +38,8 @@
 
         #welcome,
         #name,
+        #numOfQ,
+        #numQ,
         #courses-header,
         #courses {
             font-family: "Trirong", serif;
@@ -74,6 +78,12 @@
             </div>
         </div>
         <h1 id="name"></h1>
+<<<<<<< HEAD
+=======
+        <h5 id="numOfQ" style="display: none;">Number Of Questions In The Questionnaire: <span id='numQ'></span>
+        </h5>
+        <div id="questionnaire-list" class="row mx-auto" style="display: inline; "></div>
+>>>>>>> 2eb551b560cc19faac9c3de5f868dc365234bf5d
         <div id="search-result" class="row mx-auto" style="display: inline; "></div>
 
         <div>
@@ -81,14 +91,53 @@
         </div>
 
         <div id="courses" class="row mx-auto" style="display: inline; "></div>
+
+        <div id="questionnaire-AddQuestions" class="row mx-auto" style="display: inline; ">
+            <div class="row mt-2">
+                <div class="col-12 ">
+                    <form id="add-question" class="container container-atrr" style="display: none;">
+                        <h3 style="font-family: Lobster; margin-top: 8px; color: wheat;">Add Question</h3>
+                        <input class="form-control" id="new-question" placeholder="New Question">
+                        <div class="form-group" style="margin-top: 10px; ">
+                            <input class="form-control" id="answer1" placeholder="First Answer">
+                            <input class="form-control" id="answer2" placeholder="Second Answer">
+                            <input class="form-control" id="answer3" placeholder="Third Answer">
+                            <input class="form-control" id="answer4" placeholder="Fourth Answer">
+
+                        </div>
+                        <h5 style="font-family: Lobster; margin-top: 8px; color: wheat;">Correct Answer</h5>
+                        <div class="form-group" style="margin-top: 10px; ">
+                            <input type="radio" id="first-answer" name="Tcorrect-answer" value="0" checked>
+                            <label for="first-answer">First Answer</label>
+                            <input type="radio" id="second-answer" name="Tcorrect-answer" value="1">
+                            <label for="second-answer">Second Answer</label>
+                            <input type="radio" id="third-answer" name="Tcorrect-answer" value="2">
+                            <label for="third-answer">Third Answer</label>
+                            <input type="radio" id="fourth-answer" name="Tcorrect-answer" value="3">
+                            <label for="fourth-answer">Fourth Answer</label>
+                        </div>
+                        <div style="display:flex;">
+                            <button type="submit" id="submit-new-question" class="btn btn-primary">Add Question</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div id="questionnaires" class="row mx-auto" style="display: inline; font-size: 20px; "></div>
+
     </div>
+
+
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+
 
         	// eslint-disable-next-line no-undef
         	const db = firebase.firestore();
         	var myUrl = document.URL; // url of this page
-        	var id = myUrl.split('=')[1];  // get the post id from this url 
+        	const id = myUrl.split('=')[1];  // get the post id from this url 
         	db.collection('courses').doc(id).get().then(doc => {
         		document.getElementById('name').innerHTML += doc.data().name;
         	});
@@ -104,6 +153,88 @@
         				if (u.data().teacher) {
         					document.getElementById('addq').style.display = 'block';
         					document.getElementById('search-form').style.display = 'block';
+        					var addquestionnaire = document.getElementById('addq');
+        					var questionnaireId;
+        					var questionId;
+        					addquestionnaire.addEventListener('click', function (e) {
+        						var questionnaire = db.collection('questionnaires');
+        						questionnaire.add({
+        							courseId: id,
+        							numOfQuestions: 0
+        						}).then(function (docRef) {
+        							// successfully written
+        							questionnaireId = docRef.id;
+        							db.collection('courses').doc(id).update({
+        								// eslint-disable-next-line no-undef
+        								questionnaires: firebase.firestore.FieldValue.arrayUnion(questionnaireId)
+        							});
+        						});
+        						document.getElementById('numOfQ').style.display = 'block';
+        						document.getElementById('add-question').style.display = 'block';
+
+
+
+        						e.preventDefault();
+        					});
+
+
+        					/*add question*/
+        					var addQuestion = document.getElementById('submit-new-question');
+        					var numOfQues = 0;
+        					addQuestion.addEventListener('click', function (e) {
+        						/*check null fields*/
+        						let newquestion = document.getElementById('new-question');
+        						let answer1 = document.getElementById('answer1');
+        						let answer2 = document.getElementById('answer2');
+        						let answer3 = document.getElementById('answer3');
+        						let answer4 = document.getElementById('answer4');
+        						if (!!(newquestion.value) && !!(answer1.value) && !!(answer2.value) && !!(answer3.value) && !!(answer4.value)) {
+        							const answers = [answer1.value, answer2.value, answer3.value, answer4.value];
+        							let questionDb = db.collection('questions');
+        							questionDb.add({
+        								question: newquestion.value,
+        								answers: answers,
+        								// eslint-disable-next-line no-undef
+        								answer: $('input[type=\'radio\'][name=\'Tcorrect-answer\']:checked').val()
+
+        							}).then(function (docRef) {
+        								// successfully written
+        								questionId = docRef.id;
+        							});
+
+        							setTimeout(() => {
+        								db.collection('questionnaires').doc(questionnaireId).get()
+        									.then(doc => {
+        										numOfQues = doc.data().numOfQuestions;
+        										db.collection('questionnaires').doc(questionnaireId).update({
+        											// eslint-disable-next-line no-undef
+        											questions: firebase.firestore.FieldValue.arrayUnion(questionId),
+        											numOfQuestions: (++numOfQues)
+        										});
+        										document.getElementById('numQ').innerText = numOfQues;
+        									});
+
+        								alert('Question was added successfully');
+        							}, 1000);
+
+
+        							newquestion.value = '';
+        							answer1.value = '';
+        							answer2.value = '';
+        							answer3.value = '';
+        							answer4.value = '';
+
+        						}
+        						else {
+        							alert('Error,Some filed is empty');
+        						}
+
+
+        						e.preventDefault();
+        					});
+
+        				} else {/*for student*/
+        					getAllQuestionnairs();
         				}
         			});
 
@@ -144,7 +275,7 @@
         				var endcode = strFrontCode + String.fromCharCode(strEndCode.charCodeAt(0) + 1);
 
         				var result = db.collection('users').where('nameUpper', '>=', startcode.toUpperCase())
-        					.where('nameUpper', '<', endcode.toUpperCase()).where('teacher','==',false);
+        					.where('nameUpper', '<', endcode.toUpperCase()).where('teacher', '==', false);
         				await result.get().then((querySnapshot) => {  // for each post
         					querySnapshot.forEach(async (doc) => {
 
@@ -177,6 +308,19 @@
         				});
         			}
         		});
+        		async function getAllQuestionnairs() {
+
+        			await db.collection('courses').where('students', 'array-contains', user.uid).get().then((querySnapshot) => {
+        				querySnapshot.forEach((doc) => {
+        					if ((doc.data().name) == document.getElementById('name').innerText) {
+        						doc.data().questionnaires.forEach(function callback(value, index) {
+        							document.getElementById('questionnaires').innerHTML += `<a href="questionnaire.html?questionnaireId=${value}=${doc.data().name}" style="color: white;">questionnaire ${index + 1}</a></br> `;
+
+        						});
+        					}
+        				});
+        			});
+        		}
         	});
         });
 
