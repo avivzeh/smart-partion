@@ -67,6 +67,7 @@
             <a id="home" href="/">Home</a>
             <a id="profile" href="#">My Profile</a>
             <a id="addq" style="display: none;" href="#">Add a questionnaire</a>
+            <a id="partition" style="display: none;" href="#">Statistics and partition</a>
             <a id="logout" href="">Logout</a>
             <div class="search-container">
                 <form id="search-form" style="display: none;">
@@ -147,7 +148,12 @@
                     users.doc(user.uid).get().then((u) => {
                         if (u.data().teacher) {
                             document.getElementById('addq').style.display = 'block';
+                            document.getElementById('partition').style.display = 'block';
                             document.getElementById('search-form').style.display = 'block';
+                            var part = document.getElementById('partition');
+                            part.addEventListener('click', function (e) {
+                                document.getElementById('partition').setAttribute('href',`partition.html?doc=${id}`)  ;
+                            });
                             var addquestionnaire = document.getElementById('addq');
                             var questionnaireId;
                             var questionId;
@@ -159,9 +165,13 @@
                                 }).then(function (docRef) {
                                     // successfully written
                                     questionnaireId = docRef.id;
-                                    db.collection("courses").doc(id).update({
-                                        questionnaires: firebase.firestore.FieldValue.arrayUnion(questionnaireId)
-                                    })
+                                    doOnlyWhen(() => {
+                                        db.collection("courses").doc(id).update({
+                                            questionnaires: firebase.firestore.FieldValue.arrayUnion(questionnaireId)
+                                        })
+                                    }, () => {
+                                        return (questionnaireId != undefined);
+                                    }, 500);
                                 });
                                 document.getElementById('numOfQ').style.display = 'block';
                                 document.getElementById('add-question').style.display = 'block';
@@ -195,7 +205,7 @@
                                         questionId = docRef.id;
                                     });
 
-                                    setTimeout(() => {
+                                    doOnlyWhen(() => {
                                         db.collection("questionnaires").doc(questionnaireId).get()
                                             .then(doc => {
                                                 numOfQues = doc.data().numOfQuestions;
@@ -204,10 +214,12 @@
                                                     numOfQuestions: (++numOfQues)
                                                 })
                                                 document.getElementById('numQ').innerText = numOfQues;
+                                                questionId = undefined;
                                             });
-
                                         alert('Question was added successfully');
-                                    }, 1000);
+                                    }, () => {
+                                        return ((questionId != undefined) && (questionnaireId != undefined));
+                                    }, 500);
 
 
                                     newquestion.value = '';
@@ -315,6 +327,34 @@
                 }
             });
         });
+
+        /**
+         * Preform an action only when a specific condition is met, wait for it with a defined interval and not forever.
+         * @param {Function} toDoHandler - function that should run when the condition is met
+         * @param {function(): boolean} toCheckHandler - boolean function that preforms the condition test, returns the result (true means action should run)
+         * @param {number=} interval (optional) - interval between checks, in milliseconds, defaults to 1000
+         * @param {number=} times (optional) - how many times to check before we give up, defaults to 20
+         * @param {Function=} failHandler (optional) - Failure handler in case condition never met
+         * @return {void}
+         */
+         doOnlyWhen = function (toDoHandler, toCheckHandler, interval, times, failHandler) {
+            if ((!toDoHandler) || (!toCheckHandler)) return;
+            if (typeof interval == "undefined") interval = 1000;
+            if (typeof times == "undefined") times = 20;
+
+            if (--times < 0) {
+                if (typeof failHandler === 'function') {
+                    failHandler();
+                }
+                return;
+            }
+            if (toCheckHandler()) {
+                toDoHandler();
+                return;
+            }
+
+            setTimeout(function () { doOnlyWhen(toDoHandler, toCheckHandler, interval, times, failHandler); }, interval);
+        };
 
     </script>
 </body>
