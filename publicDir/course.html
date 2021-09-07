@@ -1,3 +1,5 @@
+/* eslint-disable no-undef */
+/* eslint-disable no-undef */
 <!DOCTYPE html>
 <html>
 
@@ -5,7 +7,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" type="text/css" href="stylecss.css">
-    <title>SmartPartition</title>
+    <title>Welcome to Firebase Hosting</title>
     <!-- update the version number as needed -->
     <script defer src="/__/firebase/8.6.7/firebase-app.js"></script>
     <!-- include only the Firebase features as you need -->
@@ -67,7 +69,6 @@
             <a id="home" href="/">Home</a>
             <a id="profile" href="#">My Profile</a>
             <a id="addq" style="display: none;" href="#">Add a questionnaire</a>
-            <a id="partition" style="display: none;" href="#">Statistics and partition</a>
             <a id="logout" href="">Logout</a>
             <div class="search-container">
                 <form id="search-form" style="display: none;">
@@ -77,9 +78,12 @@
             </div>
         </div>
         <h1 id="name"></h1>
+<<<<<<< HEAD
+=======
         <h5 id="numOfQ" style="display: none;">Number Of Questions In The Questionnaire: <span id='numQ'></span>
         </h5>
         <div id="questionnaire-list" class="row mx-auto" style="display: inline; "></div>
+>>>>>>> 2eb551b560cc19faac9c3de5f868dc365234bf5d
         <div id="search-result" class="row mx-auto" style="display: inline; "></div>
 
         <div>
@@ -124,6 +128,8 @@
 
     </div>
 
+
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
 
@@ -146,12 +152,7 @@
         			users.doc(user.uid).get().then((u) => {
         				if (u.data().teacher) {
         					document.getElementById('addq').style.display = 'block';
-        					document.getElementById('partition').style.display = 'block';
         					document.getElementById('search-form').style.display = 'block';
-        					var part = document.getElementById('partition');
-        					part.addEventListener('click', function () {
-        						document.getElementById('partition').setAttribute('href',`partition.html?doc=${id}`)  ;
-        					});
         					var addquestionnaire = document.getElementById('addq');
         					var questionnaireId;
         					var questionId;
@@ -163,13 +164,10 @@
         						}).then(function (docRef) {
         							// successfully written
         							questionnaireId = docRef.id;
-        							doOnlyWhen(() => {
-        								db.collection('courses').doc(id).update({
-        									questionnaires: firebase.firestore.FieldValue.arrayUnion(questionnaireId)
-        								});
-        							}, () => {
-        								return (questionnaireId != undefined);
-        							}, 500);
+        							db.collection('courses').doc(id).update({
+        								// eslint-disable-next-line no-undef
+        								questionnaires: firebase.firestore.FieldValue.arrayUnion(questionnaireId)
+        							});
         						});
         						document.getElementById('numOfQ').style.display = 'block';
         						document.getElementById('add-question').style.display = 'block';
@@ -196,6 +194,7 @@
         							questionDb.add({
         								question: newquestion.value,
         								answers: answers,
+        								// eslint-disable-next-line no-undef
         								answer: $('input[type=\'radio\'][name=\'Tcorrect-answer\']:checked').val()
 
         							}).then(function (docRef) {
@@ -203,21 +202,20 @@
         								questionId = docRef.id;
         							});
 
-        							doOnlyWhen(() => {
+        							setTimeout(() => {
         								db.collection('questionnaires').doc(questionnaireId).get()
         									.then(doc => {
         										numOfQues = doc.data().numOfQuestions;
         										db.collection('questionnaires').doc(questionnaireId).update({
+        											// eslint-disable-next-line no-undef
         											questions: firebase.firestore.FieldValue.arrayUnion(questionId),
         											numOfQuestions: (++numOfQues)
         										});
         										document.getElementById('numQ').innerText = numOfQues;
-        										questionId = undefined;
         									});
+
         								alert('Question was added successfully');
-        							}, () => {
-        								return ((questionId != undefined) && (questionnaireId != undefined));
-        							}, 500);
+        							}, 1000);
 
 
         							newquestion.value = '';
@@ -316,7 +314,7 @@
         				querySnapshot.forEach((doc) => {
         					if ((doc.data().name) == document.getElementById('name').innerText) {
         						doc.data().questionnaires.forEach(function callback(value, index) {
-        							document.getElementById('questionnaires').innerHTML += `<a href="questionnaire.html?questionnaireId=${value}=${doc.id}" style="color: white;">questionnaire ${index + 1}</a></br> `;
+        							document.getElementById('questionnaires').innerHTML += `<a href="questionnaire.html?questionnaireId=${value}=${doc.data().name}" style="color: white;">questionnaire ${index + 1}</a></br> `;
 
         						});
         					}
@@ -325,34 +323,6 @@
         		}
         	});
         });
-
-        /**
-         * Preform an action only when a specific condition is met, wait for it with a defined interval and not forever.
-         * @param {Function} toDoHandler - function that should run when the condition is met
-         * @param {function(): boolean} toCheckHandler - boolean function that preforms the condition test, returns the result (true means action should run)
-         * @param {number=} interval (optional) - interval between checks, in milliseconds, defaults to 1000
-         * @param {number=} times (optional) - how many times to check before we give up, defaults to 20
-         * @param {Function=} failHandler (optional) - Failure handler in case condition never met
-         * @return {void}
-         */
-        doOnlyWhen = function (toDoHandler, toCheckHandler, interval, times, failHandler) {
-        	if ((!toDoHandler) || (!toCheckHandler)) return;
-        	if (typeof interval == 'undefined') interval = 1000;
-        	if (typeof times == 'undefined') times = 20;
-
-        	if (--times < 0) {
-        		if (typeof failHandler === 'function') {
-        			failHandler();
-        		}
-        		return;
-        	}
-        	if (toCheckHandler()) {
-        		toDoHandler();
-        		return;
-        	}
-
-        	setTimeout(function () { doOnlyWhen(toDoHandler, toCheckHandler, interval, times, failHandler); }, interval);
-        };
 
     </script>
 </body>
