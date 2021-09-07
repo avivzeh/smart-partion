@@ -168,8 +168,7 @@
                                                 if (doc.data().answer == $("input[type='radio'][name='" + element + "']:checked").val()) {
                                                     document.querySelector("span#" + doc.id).innerHTML = "&#9989;";
                                                     db.collection('grades').doc(GradesId).update({
-                                                        results: firebase.firestore.FieldValue.arrayUnion(doc.id+'True')
-                                                        
+                                                        results: firebase.firestore.FieldValue.arrayUnion(doc.id+'True'),  
                                                     });
                                                 }
                                                 else {
