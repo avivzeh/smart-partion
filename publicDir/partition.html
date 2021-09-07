@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylecss.css">
+    <title>SmartPartition</title>
+    <!-- update the version number as needed -->
+    <script defer src="/__/firebase/8.6.7/firebase-app.js"></script>
+    <!-- include only the Firebase features as you need -->
+    <script defer src="/__/firebase/8.6.7/firebase-auth.js"></script>
+    <script defer src="/__/firebase/8.6.7/firebase-database.js"></script>
+    <script defer src="/__/firebase/8.6.7/firebase-firestore.js"></script>
+    <script defer src="/__/firebase/8.6.7/firebase-functions.js"></script>
+    <script defer src="/__/firebase/8.6.7/firebase-messaging.js"></script>
+    <script defer src="/__/firebase/8.6.7/firebase-storage.js"></script>
+    <script defer src="/__/firebase/8.6.7/firebase-analytics.js"></script>
+    <script defer src="/__/firebase/8.6.7/firebase-remote-config.js"></script>
+    <script defer src="/__/firebase/8.6.7/firebase-performance.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"
+        integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ=="
+        crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+        integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <!-- firebase-ui-auth -->
+    <script src="https://www.gstatic.com/firebasejs/ui/4.8.0/firebase-ui-auth.js"></script>
+    <link type="text/css" rel="stylesheet" href="https://www.gstatic.com/firebasejs/ui/4.8.0/firebase-ui-auth.css" />
+    <script defer src="/__/firebase/init.js?useEmulator=true"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style media="screen">
+        body {
+            background-image: url("https://img.freepik.com/free-photo/abstract-grunge-decorative-relief-navy-blue-stucco-wall-texture-wide-angle-rough-colored-background_1258-28311.jpg?size=626&ext=jpg&ga=GA1.2.1937619873.1628553600");
+            background-repeat: repeat;
+        }
+        #name {
+	color:rgb(255, 255, 255)
+  }
+  #partitionButton{
+    margin-top: 20px
+  }
+        table,td {
+  border: 1px solid white;
+  color: rgb(255, 255, 255);
+  font-weight: bold;
+  margin-top: 50px;
+}
+th {
+    border: 1px solid white;
+  color: rgb(142, 240, 30);
+}
+#high-level,#medium-level,#low-level{
+    margin-top: 50px;
+}
+#h,#m,#l {
+  display:inline-block;
+  color: rgb(142, 240, 30);
+} 
+li {
+  color: rgb(255, 255, 255);
+  font-weight: bold;
+}    
+    </style>
+</head>
+<body>
+    <div class="container col-md-8 offset-md-2 mb-5 mt-3" style="padding: 0%;">
+        <div style="background-color: white; margin-top: 15px; height: 150px; ">
+            <img src="static-assets/logo.png"
+                style="border-radius: 5px; width:210px; height: 165px; margin: 10px; margin-bottom: 20px;">
+        </div>
+
+        <div class="topnav">
+            <a id="home" href="/">Home</a>
+            <a id="profile" href="#">My Profile</a>
+            <a id="logout" href="">Logout</a>
+        </div>
+        <h1 id="name"></h1>
+        <div>
+            <button id="partitionButton">Statistics and partition </button>
+        </div>
+        <div id="statistics">
+        </div>
+    
+        <div id="h" >
+            <h2 id="high-level" style="display: none;">High Level</h2>
+            <ul id="high">
+            </ul>
+        </div>
+        <div id="m" style="margin-left: 230px;">
+            <h2 id="medium-level" style="display: none;">Medium Level</h2>
+            <ul id="med" class=" col-md-2 ">
+            </ul>
+        </div>
+        <div id="l" style="margin-left: 270px;">
+            <h2 id="low-level" style="display: none;">Low Level</h2>
+            <ul id="low" class=" col-md-2 ">
+            </ul>
+        </div>
+    </div>
+    <script>
+      
+      document.addEventListener('DOMContentLoaded', function () {
+      // eslint-disable-next-line no-undef
+      	const db = firebase.firestore();
+      	var myUrl = document.URL; // url of this page
+      	var id = myUrl.split('=')[1];  // get the post id from this url 
+      	db.collection('courses').doc(id).get().then(doc => {
+      		document.getElementById('name').innerHTML += doc.data().name;
+      	});
+      	let clickPartitionButton = false;
+      	let partition = document.getElementById('partitionButton');
+      	partition.addEventListener('click', function (e) {
+      		if(clickPartitionButton == false){
+      			document.getElementById('high-level').style.display = 'block';
+      			document.getElementById('medium-level').style.display = 'block';
+      			document.getElementById('low-level').style.display = 'block';
+      			document.getElementById('statistics').innerHTML += `<table id="table">
+                <tr>
+                  <th>STUDENT NAME</th>
+                  <th>NUMBER OF CORRECT ANSWERS IN ALL QUESTIONNAIRES</th>
+                  <th>NUMBER OF QUESTIONS IN ALL QUESTIONNAIRES</th>
+                  <th>PERCENTAGE OF CORRECT ANSWERS</th>
+                </tr>`;
+      			db.collection('courses').doc(id).get().then(course => {
+      				var numberOfQuestions = 0;
+      				course.data().questionnaires.forEach(async(qid) =>{
+      					await db.collection('questionnaires').get().then(function(querySnapshot){
+      						querySnapshot.forEach(function(qdoc){
+      							if(qdoc.id == qid){
+      								numberOfQuestions += qdoc.data().numOfQuestions;
+      							}
+      						});
+      					});
+      				});
+      				course.data().students.forEach(async(sid) => { 
+      					var studentName = await db.collection('users').doc(sid).get().then(student =>{
+      						return student.data().name;
+      					}); 
+      					var numberOfCorrectQuestions = 0; 
+      					var percentage = 0;
+      					course.data().questionnaires.forEach(async(qid) =>{
+      						await db.collection('grades').get().then(function(querySnapshot) {
+      							querySnapshot.forEach(function(gdoc) {
+      								if(gdoc.data().questionnair == qid){
+      									if(gdoc.data().student == sid){
+      										gdoc.data().results.forEach(async(answer) =>{
+      											if(String(answer).includes('True')){
+      												numberOfCorrectQuestions ++;
+      												console.log(numberOfCorrectQuestions);
+      											}
+      										});
+      									}
+      								}
+      							});
+      						});
+      					});
+      					setTimeout(function(){
+      						percentage = numberOfCorrectQuestions/numberOfQuestions;
+      						if(percentage < 0.34){
+      							document.getElementById('low').innerHTML += `<li>${studentName}</li>`;
+      						} else if(percentage < 0.67){
+      							document.getElementById('med').innerHTML += `<li>${studentName}</li>`;
+      						} else{
+      							document.getElementById('high').innerHTML += `<li>${studentName}</li>`;
+      						}
+      						document.getElementById('table').innerHTML +=`<tr>
+                  <td> ${studentName}</td><td> ${numberOfCorrectQuestions}</td><td> ${numberOfQuestions}</td><td> ${percentage}</td></tr>`;
+      					},500);    
+      				});
+      				document.getElementById('statistics').innerHTML +='</table>';
+      			});						
+      			e.preventDefault();
+      			clickPartitionButton = true;
+      		}
+      	}); 
+      	let logoutBtn = document.getElementById('logout');
+
+      	logoutBtn.addEventListener('click', function () {
+      		// eslint-disable-next-line no-undef
+      		firebase.auth().signOut()
+      			.then(function () {
+      				// Sign-out successful.
+      				location.href = '/';
+      			})
+      			.catch(function (error) {
+      				console.log(error);// An error happened
+      			});
+                       
+      	});       
+      });
+
+    </script>
+</body>
+
+</html>

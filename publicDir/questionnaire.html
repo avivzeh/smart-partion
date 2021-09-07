@@ -1,4 +1,4 @@
-/* eslint-disable no-undef */
+
 <!DOCTYPE html>
 <html>
 
@@ -82,14 +82,16 @@
 
     </div>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded',async function () {
         	var myUrl = document.URL; // url of this page
-        	const questionnaireId = myUrl.split('=')[1];  // get the post id from this url 
-        	const CourseName = myUrl.split('=')[2];
-        	document.getElementById('name').innerHTML += CourseName;
         	const db = firebase.firestore();
+        	const questionnaireId = myUrl.split('=')[1];  // get the questionnaire id from this url 
+        	const CourseId = myUrl.split('=')[2];
+        	document.getElementById('name').innerHTML += await db.collection('courses').doc(CourseId).get().then(c => c.data().name);
+        	// eslint-disable-next-line no-undef
         	var users = db.collection('users');
 
+        	// eslint-disable-next-line no-undef
         	firebase.auth().onAuthStateChanged((user) => {
 
         		if (user) {
@@ -125,12 +127,11 @@
         		}
 
         		async function getQuistion(questionId) {
-        			let count = 1;
         			await db.collection('questions').get().then((querySnapshot) => {
         				querySnapshot.forEach((doc) => {
         					if (doc.id == questionId) {
         						document.getElementById('questionForm').style.display = 'block';
-        						let ans = "";
+        						let ans = '';
         						doc.data().answers.forEach(function callback(value, index) {
         							if (index == 0)
         								ans += '<input id=' + doc.id + ' type="radio" name=' + doc.id + ' value = ' + index + ' checked> <label style="font-size: 20px;">' + (index + 1) + ')   </label> <label style="font-size: 20px;">' + value + '</label><br>';
@@ -166,15 +167,17 @@
         							db.collection('questions').get().then((querySnapshot) => {
         								querySnapshot.forEach((doc) => {
         									if (doc.id == element) {
-        										if (doc.data().answer == $("input[type='radio'][name='" + element + "']:checked").val()) {
-        											document.querySelector("span#" + doc.id).innerHTML = "&#9989;";
+        										if (doc.data().answer == $('input[type=\'radio\'][name=\'' + element + '\']:checked').val()) {
+        											document.querySelector('span#' + doc.id).innerHTML = '&#9989;';
         											db.collection('grades').doc(GradesId).update({
+        												// eslint-disable-next-line no-undef
         												results: firebase.firestore.FieldValue.arrayUnion('True')
         											});
         										}
         										else {
-        											document.querySelector("span#" + doc.id).innerHTML = "&#10060;";
+        											document.querySelector('span#' + doc.id).innerHTML = '&#10060;';
         											db.collection('grades').doc(GradesId).update({
+        												// eslint-disable-next-line no-undef
         												results: firebase.firestore.FieldValue.arrayUnion('False')
         											});
         										}
@@ -195,6 +198,33 @@
         	});
         });
 
+        /**
+         * Preform an action only when a specific condition is met, wait for it with a defined interval and not forever.
+         * @param {Function} toDoHandler - function that should run when the condition is met
+         * @param {function(): boolean} toCheckHandler - boolean function that preforms the condition test, returns the result (true means action should run)
+         * @param {number=} interval (optional) - interval between checks, in milliseconds, defaults to 1000
+         * @param {number=} times (optional) - how many times to check before we give up, defaults to 20
+         * @param {Function=} failHandler (optional) - Failure handler in case condition never met
+         * @return {void}
+         */
+        doOnlyWhen = function (toDoHandler, toCheckHandler, interval, times, failHandler) {
+        	if ((!toDoHandler) || (!toCheckHandler)) return;
+        	if (typeof interval == 'undefined') interval = 1000;
+        	if (typeof times == 'undefined') times = 20;
+
+        	if (--times < 0) {
+        		if (typeof failHandler === 'function') {
+        			failHandler();
+        		}
+        		return;
+        	}
+        	if (toCheckHandler()) {
+        		toDoHandler();
+        		return;
+        	}
+
+        	setTimeout(function () { doOnlyWhen(toDoHandler, toCheckHandler, interval, times, failHandler); }, interval);
+        };
 
     </script>
 </body>

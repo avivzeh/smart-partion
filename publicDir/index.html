@@ -68,7 +68,7 @@
 			<a id="logout" style="display: none;" href="">Logout</a>
 			<div class="search-container">
 				<form id="search-form" style="display: none;">
-					<input id="search" type="text" placeholder="Search student to add...">
+					<input id="search" type="text" placeholder="Search course to add...">
 					<button id="search-btn"><i class="fa fa-search"></i></button>
 				</form>
 			</div>
@@ -117,10 +117,6 @@
 				</div>
 			</div>
 		</div>
-
-
-
-
 
 		<div>
 			<h1 id="courses-header" style="display: none;">My Courses </h1>
@@ -334,6 +330,7 @@
 						if (document.getElementById('teacher').checked == true) {
 							users.doc(user.uid).set({
 								name: user.displayName,
+								nameUpper: user.displayName.toUpperCase(),
 								email: user.email,
 								teacher: true,
 								student: false
