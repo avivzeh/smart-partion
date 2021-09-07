@@ -1,5 +1,3 @@
-/* eslint-disable no-undef */
-/* eslint-disable no-undef */
 <!DOCTYPE html>
 <html>
 
@@ -69,6 +67,7 @@
             <a id="home" href="/">Home</a>
             <a id="profile" href="#">My Profile</a>
             <a id="addq" style="display: none;" href="#">Add a questionnaire</a>
+            <a id="partition" style="display: none;" href="#">Statistics and partition</a>
             <a id="logout" href="">Logout</a>
             <div class="search-container">
                 <form id="search-form" style="display: none;">
@@ -78,12 +77,9 @@
             </div>
         </div>
         <h1 id="name"></h1>
-<<<<<<< HEAD
-=======
         <h5 id="numOfQ" style="display: none;">Number Of Questions In The Questionnaire: <span id='numQ'></span>
         </h5>
         <div id="questionnaire-list" class="row mx-auto" style="display: inline; "></div>
->>>>>>> 2eb551b560cc19faac9c3de5f868dc365234bf5d
         <div id="search-result" class="row mx-auto" style="display: inline; "></div>
 
         <div>
@@ -134,156 +130,164 @@
         document.addEventListener('DOMContentLoaded', function () {
 
 
-        	// eslint-disable-next-line no-undef
-        	const db = firebase.firestore();
-        	var myUrl = document.URL; // url of this page
-        	const id = myUrl.split('=')[1];  // get the post id from this url 
-        	db.collection('courses').doc(id).get().then(doc => {
-        		document.getElementById('name').innerHTML += doc.data().name;
-        	});
-        	var users = db.collection('users');
-        	// eslint-disable-next-line no-undef
-        	firebase.auth().onAuthStateChanged((user) => {
+            // eslint-disable-next-line no-undef
+            const db = firebase.firestore();
+            var myUrl = document.URL; // url of this page
+            const id = myUrl.split('=')[1];  // get the post id from this url 
+            db.collection('courses').doc(id).get().then(doc => {
+                document.getElementById('name').innerHTML += doc.data().name;
+            });
+            var users = db.collection('users');
+            // eslint-disable-next-line no-undef
+            firebase.auth().onAuthStateChanged((user) => {
 
-        		if (user) {
-        			// User is signed in, see docs for a list of available properties
-        			// https://firebase.google.com/docs/reference/js/firebase.User
+                if (user) {
+                    // User is signed in, see docs for a list of available properties
+                    // https://firebase.google.com/docs/reference/js/firebase.User
 
-        			users.doc(user.uid).get().then((u) => {
-        				if (u.data().teacher) {
-        					document.getElementById('addq').style.display = 'block';
-        					document.getElementById('search-form').style.display = 'block';
-        					var addquestionnaire = document.getElementById('addq');
-        					var questionnaireId;
-        					var questionId;
-        					addquestionnaire.addEventListener('click', function (e) {
-        						var questionnaire = db.collection('questionnaires');
-        						questionnaire.add({
-        							courseId: id,
-        							numOfQuestions: 0
-        						}).then(function (docRef) {
-        							// successfully written
-        							questionnaireId = docRef.id;
-        							db.collection('courses').doc(id).update({
-        								// eslint-disable-next-line no-undef
-        								questionnaires: firebase.firestore.FieldValue.arrayUnion(questionnaireId)
-        							});
-        						});
-        						document.getElementById('numOfQ').style.display = 'block';
-        						document.getElementById('add-question').style.display = 'block';
-
-
-
-        						e.preventDefault();
-        					});
-
-
-        					/*add question*/
-        					var addQuestion = document.getElementById('submit-new-question');
-        					var numOfQues = 0;
-        					addQuestion.addEventListener('click', function (e) {
-        						/*check null fields*/
-        						let newquestion = document.getElementById('new-question');
-        						let answer1 = document.getElementById('answer1');
-        						let answer2 = document.getElementById('answer2');
-        						let answer3 = document.getElementById('answer3');
-        						let answer4 = document.getElementById('answer4');
-        						if (!!(newquestion.value) && !!(answer1.value) && !!(answer2.value) && !!(answer3.value) && !!(answer4.value)) {
-        							const answers = [answer1.value, answer2.value, answer3.value, answer4.value];
-        							let questionDb = db.collection('questions');
-        							questionDb.add({
-        								question: newquestion.value,
-        								answers: answers,
-        								// eslint-disable-next-line no-undef
-        								answer: $('input[type=\'radio\'][name=\'Tcorrect-answer\']:checked').val()
-
-        							}).then(function (docRef) {
-        								// successfully written
-        								questionId = docRef.id;
-        							});
-
-        							setTimeout(() => {
-        								db.collection('questionnaires').doc(questionnaireId).get()
-        									.then(doc => {
-        										numOfQues = doc.data().numOfQuestions;
-        										db.collection('questionnaires').doc(questionnaireId).update({
-        											// eslint-disable-next-line no-undef
-        											questions: firebase.firestore.FieldValue.arrayUnion(questionId),
-        											numOfQuestions: (++numOfQues)
-        										});
-        										document.getElementById('numQ').innerText = numOfQues;
-        									});
-
-        								alert('Question was added successfully');
-        							}, 1000);
+                    users.doc(user.uid).get().then((u) => {
+                        if (u.data().teacher) {
+                            document.getElementById('addq').style.display = 'block';
+                            document.getElementById('partition').style.display = 'block';
+                            document.getElementById('search-form').style.display = 'block';
+                            var part = document.getElementById('partition');
+                            part.addEventListener('click', function (e) {
+                                document.getElementById('partition').setAttribute('href',`partition.html?doc=${id}`)  ;
+                            });
+                            var addquestionnaire = document.getElementById('addq');
+                            var questionnaireId;
+                            var questionId;
+                            addquestionnaire.addEventListener('click', function (e) {
+                                var questionnaire = db.collection('questionnaires');
+                                questionnaire.add({
+                                    courseId: id,
+                                    numOfQuestions: 0
+                                }).then(function (docRef) {
+                                    // successfully written
+                                    questionnaireId = docRef.id;
+                                    doOnlyWhen(() => {
+                                        db.collection("courses").doc(id).update({
+                                            questionnaires: firebase.firestore.FieldValue.arrayUnion(questionnaireId)
+                                        })
+                                    }, () => {
+                                        return (questionnaireId != undefined);
+                                    }, 500);
+                                });
+                                document.getElementById('numOfQ').style.display = 'block';
+                                document.getElementById('add-question').style.display = 'block';
 
 
-        							newquestion.value = '';
-        							answer1.value = '';
-        							answer2.value = '';
-        							answer3.value = '';
-        							answer4.value = '';
 
-        						}
-        						else {
-        							alert('Error,Some filed is empty');
-        						}
+                                e.preventDefault();
+                            });
 
 
-        						e.preventDefault();
-        					});
+                            /*add question*/
+                            var addQuestion = document.getElementById('submit-new-question');
+                            var numOfQues = 0;
+                            addQuestion.addEventListener('click', function (e) {
+                                /*check null fields*/
+                                let newquestion = document.getElementById('new-question');
+                                let answer1 = document.getElementById('answer1');
+                                let answer2 = document.getElementById('answer2');
+                                let answer3 = document.getElementById('answer3');
+                                let answer4 = document.getElementById('answer4');
+                                if (!!(newquestion.value) && !!(answer1.value) && !!(answer2.value) && !!(answer3.value) && !!(answer4.value)) {
+                                    const answers = [answer1.value, answer2.value, answer3.value, answer4.value];
+                                    let questionDb = db.collection('questions');
+                                    questionDb.add({
+                                        question: newquestion.value,
+                                        answers: answers,
+                                        answer: $("input[type='radio'][name='Tcorrect-answer']:checked").val()
 
-        				} else {/*for student*/
-        					getAllQuestionnairs();
-        				}
-        			});
+                                    }).then(function (docRef) {
+                                        // successfully written
+                                        questionId = docRef.id;
+                                    });
 
-        		} else {
-        			// User is signed out
-        			location.href = '/';  // refresh the page
-        		}
+                                    doOnlyWhen(() => {
+                                        db.collection("questionnaires").doc(questionnaireId).get()
+                                            .then(doc => {
+                                                numOfQues = doc.data().numOfQuestions;
+                                                db.collection("questionnaires").doc(questionnaireId).update({
+                                                    questions: firebase.firestore.FieldValue.arrayUnion(questionId),
+                                                    numOfQuestions: (++numOfQues)
+                                                })
+                                                document.getElementById('numQ').innerText = numOfQues;
+                                                questionId = undefined;
+                                            });
+                                        alert('Question was added successfully');
+                                    }, () => {
+                                        return ((questionId != undefined) && (questionnaireId != undefined));
+                                    }, 500);
 
-        		// logout button
-        		let logoutBtn = document.getElementById('logout');
 
-        		logoutBtn.addEventListener('click', function () {
-        			// eslint-disable-next-line no-undef
-        			firebase.auth().signOut()
-        				.then(function () {
-        					// Sign-out successful.
-        					location.href = '/';
-        				})
-        				.catch(function (error) {
-        					console.log(error);// An error happened
-        				});
-        		});
+                                    newquestion.value = '';
+                                    answer1.value = '';
+                                    answer2.value = '';
+                                    answer3.value = '';
+                                    answer4.value = '';
 
-        		const searchButton = document.getElementById('search-btn');
-        		searchButton.addEventListener('click', async (e) => {
-        			var search = document.getElementById('search').value.trim().toLowerCase();
-        			e.preventDefault();
-        			document.getElementById('search-result').innerHTML = '';
+                                }
+                                else {
+                                    alert('Error,Some filed is empty');
+                                }
 
-        			if (search == '')
-        				return;
-        			else {  // add post to database
-        				var strlength = search.length;
-        				var strFrontCode = search.slice(0, strlength - 1);
-        				var strEndCode = search.slice(strlength - 1, search.length);
 
-        				var startcode = search;
-        				var endcode = strFrontCode + String.fromCharCode(strEndCode.charCodeAt(0) + 1);
+                                e.preventDefault();
+                            });
 
-        				var result = db.collection('users').where('nameUpper', '>=', startcode.toUpperCase())
-        					.where('nameUpper', '<', endcode.toUpperCase()).where('teacher', '==', false);
-        				await result.get().then((querySnapshot) => {  // for each post
-        					querySnapshot.forEach(async (doc) => {
+                        } else {/*for student*/
+                            getAllQuestionnairs();
+                        }
+                    });
 
-        						// if the user was found already got a request from this teacher display to hom a sent state
-        						var requests = await db.collection('requests').where('from', '==', user.uid).where('course', '==', id).where('to', '==', doc.id).get();
+                } else {
+                    // User is signed out
+                    location.href = '/';  // refresh the page
+                }
 
-        						if (!requests.empty) {
-        							document.getElementById('search-result').innerHTML += `<div id='${doc.id}' style=" background-color:white;
+                // logout button
+                let logoutBtn = document.getElementById('logout');
+
+                logoutBtn.addEventListener('click', function () {
+                    // eslint-disable-next-line no-undef
+                    firebase.auth().signOut()
+                        .then(function () {
+                            // Sign-out successful.
+                            location.href = '/';
+                        })
+                        .catch(function (error) {
+                            console.log(error);// An error happened
+                        });
+                });
+
+                const searchButton = document.getElementById('search-btn');
+                searchButton.addEventListener('click', async (e) => {
+                    var search = document.getElementById('search').value.trim().toLowerCase();
+                    e.preventDefault();
+                    document.getElementById('search-result').innerHTML = '';
+
+                    if (search == '')
+                        return;
+                    else {  // add post to database
+                        var strlength = search.length;
+                        var strFrontCode = search.slice(0, strlength - 1);
+                        var strEndCode = search.slice(strlength - 1, search.length);
+
+                        var startcode = search;
+                        var endcode = strFrontCode + String.fromCharCode(strEndCode.charCodeAt(0) + 1);
+
+                        var result = db.collection('users').where('nameUpper', '>=', startcode.toUpperCase())
+                            .where('nameUpper', '<', endcode.toUpperCase()).where('teacher', '==', false);
+                        await result.get().then((querySnapshot) => {  // for each post
+                            querySnapshot.forEach(async (doc) => {
+
+                                // if the user was found already got a request from this teacher display to hom a sent state
+                                var requests = await db.collection('requests').where('from', '==', user.uid).where('course', '==', id).where('to', '==', doc.id).get();
+
+                                if (!requests.empty) {
+                                    document.getElementById('search-result').innerHTML += `<div id='${doc.id}' style=" background-color:white;
                                     width:fit-content; padding: 5px; border-style: groove; border-radius: 3px; margin-top: 3px;">
                                     <a>${doc.data().name}</a></br>
                                     <a>${doc.data().email}</a>
@@ -293,9 +297,9 @@
                                         firebase.firestore().collection('requests').doc(req.id).delete(); }); });
                                     
                                     document.getElementById('${doc.id}').style.display = 'none';">Cancel Request</button></div >`;
-        						} else {
-        							// req.data() will be undefined in this case
-        							document.getElementById('search-result').innerHTML += `<div id='send-${doc.id}' style=" background-color:white; width:fit-content;
+                                } else {
+                                    // req.data() will be undefined in this case
+                                    document.getElementById('search-result').innerHTML += `<div id='send-${doc.id}' style=" background-color:white; width:fit-content;
                                      padding: 5px; border-style: groove; border-radius: 3px; margin-top: 3px;">
                                     <a>${doc.data().name}</a></br>
                                     <a>${doc.data().email}</a>
@@ -303,26 +307,54 @@
                                      to: '${doc.id}', course:'${id}' });
                                      document.getElementById('send-${doc.id}').style.display = 'none' " >Send Request</button>
                                      </div >`;
-        						}
-        					});
-        				});
-        			}
-        		});
-        		async function getAllQuestionnairs() {
+                                }
+                            });
+                        });
+                    }
+                });
+                async function getAllQuestionnairs() {
 
-        			await db.collection('courses').where('students', 'array-contains', user.uid).get().then((querySnapshot) => {
-        				querySnapshot.forEach((doc) => {
-        					if ((doc.data().name) == document.getElementById('name').innerText) {
-        						doc.data().questionnaires.forEach(function callback(value, index) {
-        							document.getElementById('questionnaires').innerHTML += `<a href="questionnaire.html?questionnaireId=${value}=${doc.data().name}" style="color: white;">questionnaire ${index + 1}</a></br> `;
+                    await db.collection('courses').where('students', 'array-contains', user.uid).get().then((querySnapshot) => {
+                        querySnapshot.forEach((doc) => {
+                            if ((doc.data().name) == document.getElementById('name').innerText) {
+                                doc.data().questionnaires.forEach(function callback(value, index) {
+                                    document.getElementById('questionnaires').innerHTML += `<a href="questionnaire.html?questionnaireId=${value}=${doc.data().name}" style="color: white;">questionnaire ${index + 1}</a></br> `;
 
-        						});
-        					}
-        				});
-        			});
-        		}
-        	});
+                                });
+                            }
+                        });
+                    });
+                }
+            });
         });
+
+        /**
+         * Preform an action only when a specific condition is met, wait for it with a defined interval and not forever.
+         * @param {Function} toDoHandler - function that should run when the condition is met
+         * @param {function(): boolean} toCheckHandler - boolean function that preforms the condition test, returns the result (true means action should run)
+         * @param {number=} interval (optional) - interval between checks, in milliseconds, defaults to 1000
+         * @param {number=} times (optional) - how many times to check before we give up, defaults to 20
+         * @param {Function=} failHandler (optional) - Failure handler in case condition never met
+         * @return {void}
+         */
+         doOnlyWhen = function (toDoHandler, toCheckHandler, interval, times, failHandler) {
+            if ((!toDoHandler) || (!toCheckHandler)) return;
+            if (typeof interval == "undefined") interval = 1000;
+            if (typeof times == "undefined") times = 20;
+
+            if (--times < 0) {
+                if (typeof failHandler === 'function') {
+                    failHandler();
+                }
+                return;
+            }
+            if (toCheckHandler()) {
+                toDoHandler();
+                return;
+            }
+
+            setTimeout(function () { doOnlyWhen(toDoHandler, toCheckHandler, interval, times, failHandler); }, interval);
+        };
 
     </script>
 </body>
