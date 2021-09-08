@@ -152,7 +152,7 @@
                             document.getElementById('search-form').style.display = 'block';
                             var part = document.getElementById('partition');
                             part.addEventListener('click', function (e) {
-                                document.getElementById('partition').setAttribute('href',`partition.html?doc=${id}`)  ;
+                                document.getElementById('partition').setAttribute('href', `partition.html?doc=${id}`);
                             });
                             var addquestionnaire = document.getElementById('addq');
                             var questionnaireId;
@@ -337,7 +337,7 @@
          * @param {Function=} failHandler (optional) - Failure handler in case condition never met
          * @return {void}
          */
-         doOnlyWhen = function (toDoHandler, toCheckHandler, interval, times, failHandler) {
+        doOnlyWhen = function (toDoHandler, toCheckHandler, interval, times, failHandler) {
             if ((!toDoHandler) || (!toCheckHandler)) return;
             if (typeof interval == "undefined") interval = 1000;
             if (typeof times == "undefined") times = 20;

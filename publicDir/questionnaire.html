@@ -109,12 +109,21 @@
 
                 }
                 async function getQuistionsId() {
-
+                    var count = 0, i = 0;
+                    var checkSolved = false;
+                    await db.collection('grades').where('student', '==', user.uid).get().then((querySnapshot) => {
+                        querySnapshot.forEach((doc) => {
+                            if (doc.data().questionnair == questionnaireId) {
+                                checkSolved = true;
+                            }
+                        });
+                    });
                     await db.collection('questionnaires').get().then((querySnapshot) => {
                         querySnapshot.forEach((doc) => {
                             if (doc.id == questionnaireId) {
                                 doc.data().questions.forEach(element => {
-                                    getQuistion(element);
+                                    getQuistion(element, checkSolved, i);
+                                    i++;
                                 });
 
 
@@ -123,22 +132,47 @@
                     });
                 }
 
-                async function getQuistion(questionId) {
-                    let count = 1;
+                async function getQuistion(questionId, checkS, ind) {
+
+                    var resultsArr = [];
+                    if (checkS) {
+                        db.collection('grades').where('student', '==', user.uid).get().then((querySnapshot) => {
+                            querySnapshot.forEach((doc) => {
+                                if (doc.data().questionnair == questionnaireId) {
+                                    doc.data().results.forEach(function callback(value, index) {
+                                        resultsArr[index] = value.slice(-1)
+                                    });
+                                }
+                            });
+                        });
+                    }
                     await db.collection('questions').get().then((querySnapshot) => {
                         querySnapshot.forEach((doc) => {
                             if (doc.id == questionId) {
                                 document.getElementById('questionForm').style.display = 'block'
                                 let ans = "";
                                 doc.data().answers.forEach(function callback(value, index) {
-                                    if (index == 0)
-                                        ans += '<input id=' + doc.id + ' type="radio" name=' + doc.id + ' value = ' + index + ' checked> <label style="font-size: 20px;">' + (index + 1) + ')   </label> <label style="font-size: 20px;">' + value + '</label><br>'
-                                    else
-                                        ans += '<input id=' + doc.id + ' type="radio" name=' + doc.id + ' value = ' + index + ' > <label style="font-size: 20px;">' + (index + 1) + ')   </label> <label style="font-size: 20px;">' + value + '</label><br>'
+                                    if (checkS) {
+                                        if (resultsArr[ind] == index) {
+                                            if (doc.data().answer == resultsArr[ind])
+                                                ans += '<input id=a' + doc.id + ' type="radio" name=' + doc.id + ' value = ' + index + ' checked> <label style="font-size: 20px;">' + (index + 1) + ')   </label> <label style="font-size: 20px;">' + value + '&#9989;</label><br>'
+                                            else
+                                                ans += '<input id=a' + doc.id + ' type="radio" name=' + doc.id + ' value = ' + index + ' checked> <label style="font-size: 20px;">' + (index + 1) + ')   </label> <label style="font-size: 20px;">' + value + '&#10060;</label><br>'
 
+                                        }
+                                        else
+                                            ans += '<input id=a' + doc.id + ' type="radio" name=' + doc.id + ' value = ' + index + ' disabled> <label style="font-size: 20px;">' + (index + 1) + ')   </label> <label style="font-size: 20px;">' + value + '</label><br>'
+
+                                    }
+                                    else {
+                                        if (index == 0)
+                                            ans += '<input id=a' + doc.id + ' type="radio" name=' + doc.id + ' value = ' + index + ' checked> <label style="font-size: 20px;">' + (index + 1) + ')   </label> <label style="font-size: 20px;">' + value + '</label><br>'
+                                        else
+                                            ans += '<input id=a' + doc.id + ' type="radio" name=' + doc.id + ' value = ' + index + ' > <label style="font-size: 20px;">' + (index + 1) + ')   </label> <label style="font-size: 20px;">' + value + '</label><br>'
+                                    }
                                 });
-
-                                document.getElementById('questions').innerHTML += `<label id="question" style="font-size: 30px">${doc.data().question}</label><span id=${doc.id}> </span>  <br>${ans}<hr style="border-color:white"><br>`
+                                var a = 'a';
+                                document.getElementById('questions').innerHTML += `<label id="question" style="font-size: 30px">${doc.data().question}</label><span id=${a}${doc.id}> </span>  <br>${ans}<hr style="border-color:white"><br>`
 
                             }
 
@@ -146,9 +180,14 @@
                         });
 
                     });
+                    if (checkS) {
+                        document.querySelector('h3').innerHTML = '&#9997; You already solved this questionnaire &#9997;'
+                        var sendResult = document.getElementById('submit-Questionnaire');
+                        sendResult.disabled = true;
+                    }
                 }
 
-                 function submit() {
+                function submit() {
                     var GradesId;
                     db.collection('grades').add({
                         questionnair: questionnaireId,
@@ -158,44 +197,47 @@
                         GradesId = docRef.id;
                     });
                     doOnlyWhen(() => {
-                     db.collection('questionnaires').get().then((querySnapshot) => {
-                        querySnapshot.forEach((doc) => {
-                            if (doc.id == questionnaireId) {
-                                doc.data().questions.forEach(element => {
-                                    db.collection('questions').get().then((querySnapshot) => {
-                                        querySnapshot.forEach((doc) => {
-                                            if (doc.id == element) {
-                                                if (doc.data().answer == $("input[type='radio'][name='" + element + "']:checked").val()) {
-                                                    document.querySelector("span#" + doc.id).innerHTML = "&#9989;";
-                                                    db.collection('grades').doc(GradesId).update({
-                                                        results: firebase.firestore.FieldValue.arrayUnion(doc.id+'True'),  
+                        db.collection('questionnaires').get().then((querySnapshot) => {
+                            querySnapshot.forEach((doc) => {
+                                if (doc.id == questionnaireId) {
+                                    doc.data().questions.forEach(element => {
+                                        db.collection('questions').get().then((querySnapshot) => {
+                                            querySnapshot.forEach((doc) => {
+                                                if (doc.id == element) {
+                                                    if (doc.data().answer == $("input[type='radio'][name='" + element + "']:checked").val()) {
+                                                        document.querySelector("span#a" + doc.id).innerHTML = "&#9989;";
+                                                        db.collection('grades').doc(GradesId).update({
+                                                            results: firebase.firestore.FieldValue.arrayUnion(doc.id + 'True' + $("input[type='radio'][name='" + element + "']:checked").val()),
+                                                        });
+                                                    }
+                                                    else {
+                                                        document.querySelector("span#a" + doc.id).innerHTML = "&#10060;";
+                                                        db.collection('grades').doc(GradesId).update({
+                                                            results: firebase.firestore.FieldValue.arrayUnion(doc.id + 'False' + $("input[type='radio'][name='" + element + "']:checked").val())
+                                                        });
+                                                    }
+                                                    document.querySelectorAll('input#a' + doc.id).forEach((ele) => {
+                                                        if (ele.checked == false)
+                                                            ele.disabled = true;
                                                     });
                                                 }
-                                                else {
-                                                    document.querySelector("span#" + doc.id).innerHTML = "&#10060;";
-                                                    db.collection('grades').doc(GradesId).update({
-                                                        results: firebase.firestore.FieldValue.arrayUnion(doc.id+'False')
-                                                    });
-                                                }
-                                                document.querySelectorAll('input#' + doc.id).forEach((ele) => {
-                                                    if (ele.checked == false)
-                                                        ele.disabled = true;
-                                                });
-                                            }
-                                        });
-                                    })
-                                });
+                                            });
+                                        })
+                                    });
 
 
-                            }
+                                }
+                            });
                         });
-                    });
-                }, () => {
-                            return ((GradesId != undefined));
-                        }, 500);
+                    }, () => {
+                        return ((GradesId != undefined));
+                    }, 500);
                 }
+
             });
         });
+
+
 
         /**
          * Preform an action only when a specific condition is met, wait for it with a defined interval and not forever.
@@ -206,7 +248,7 @@
          * @param {Function=} failHandler (optional) - Failure handler in case condition never met
          * @return {void}
          */
-         doOnlyWhen = function (toDoHandler, toCheckHandler, interval, times, failHandler) {
+        doOnlyWhen = function (toDoHandler, toCheckHandler, interval, times, failHandler) {
             if ((!toDoHandler) || (!toCheckHandler)) return;
             if (typeof interval == "undefined") interval = 1000;
             if (typeof times == "undefined") times = 20;
