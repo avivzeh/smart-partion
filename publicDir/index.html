@@ -481,8 +481,13 @@
                                     <a>${u.data().email}</a>
 									<p>For Joinning To: ${c.data().name} </p>
 									<div style=" display: flex; padding: 5px; border-style: groove; border-radius: 3px; margin-top: 3px;">
-                                    <button id='send-${u.id}' style="margin-left: 5px;" onclick="firebase.firestore().collection('courses').doc('${req.data().course}')
-									 .update({ students: firebase.firestore.FieldValue.arrayUnion('${user.uid}') });
+                                    <button id='send-${u.id}' style="margin-left: 5px;" onclick="
+									if(${u.data().student})
+									firebase.firestore().collection('courses').doc('${req.data().course}')
+									 .update({ students: firebase.firestore.FieldValue.arrayUnion('${u.id}')});
+									 else
+									 firebase.firestore().collection('courses').doc('${req.data().course}')
+									 .update({ students: firebase.firestore.FieldValue.arrayUnion('${user.uid}')});
 									 firebase.firestore().collection('requests').doc('${req.id}').delete();
                                      document.getElementById('${req.id}').style.display = 'none'; " >Accept</button>
 									 <button id='send-${u.id}' style="margin-left: 5px;" onclick="
