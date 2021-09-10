@@ -63,7 +63,6 @@
 
 		<div class="topnav">
 			<a id="home" style="display: none;" href="/">Home</a>
-			<a id="profile" style="display: none;" href="#">My Profile</a>
 			<a id="addCourse" style="display: none;" href="#">Add course</a>
 			<a id="logout" style="display: none;" href="">Logout</a>
 			<div class="search-container">
@@ -118,10 +117,6 @@
 				</div>
 			</div>
 		</div>
-
-
-
-
 
 		<div>
 			<h1 id="courses-header" style="display: none;">My Courses </h1>
@@ -214,7 +209,6 @@
 					document.getElementById('logout').style.display = 'block';
 					users.doc(uid).get().then((doc) => {
 						if (doc.exists && (!doc.data().init == false || doc.data().init == undefined)) {
-							document.getElementById('profile').style.display = 'block';
 							document.getElementById('welcome').style.display = 'block';
 							document.getElementById('courses-header').style.display = 'block';
 							document.getElementById('courses').style.display = 'block';
@@ -263,7 +257,6 @@
 				} else {
 					// User is signed out
 					document.getElementById('first-login').style.display = 'none';
-					document.getElementById('profile').style.display = 'none';
 					document.getElementById('logout').style.display = 'none';
 					document.getElementById('welcome').style.display = 'none';
 					document.getElementById('search-form').style.display = 'none';
@@ -305,7 +298,6 @@
 						});
 
 						document.getElementById('first-login').style.display = 'none';
-						document.getElementById('profile').style.display = 'block';
 						document.getElementById('logout').style.display = 'block';
 						document.getElementById('welcome').style.display = 'block';
 						document.getElementById('courses').style.display = 'block';
@@ -444,9 +436,6 @@
 
 				async function getCoursesForStudent() {
 
-					// document.getElementById("courses").innerHTML="";
-					// eslint-disable-next-line no-undef
-
 					await db.collection('courses').where('students', 'array-contains', user.uid).get().then((querySnapshot) => {
 						querySnapshot.forEach((doc) => {
 
@@ -456,9 +445,6 @@
 					});
 				}
 				async function getCoursesForTeacher() {
-
-					// document.getElementById("courses").innerHTML="";
-					// eslint-disable-next-line no-undef
 
 					await db.collection('courses').where('teacher', '==', user.uid).get().then((querySnapshot) => {
 						querySnapshot.forEach((doc) => {
