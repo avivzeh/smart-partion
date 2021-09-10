@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" type="text/css" href="stylecss.css">
-    <title>Welcome to Firebase Hosting</title>
+    <title>SmartPartition</title>
     <!-- update the version number as needed -->
     <script defer src="/__/firebase/8.6.7/firebase-app.js"></script>
     <!-- include only the Firebase features as you need -->
@@ -130,164 +130,164 @@
         document.addEventListener('DOMContentLoaded', function () {
 
 
-            // eslint-disable-next-line no-undef
-            const db = firebase.firestore();
-            var myUrl = document.URL; // url of this page
-            const id = myUrl.split('=')[1];  // get the post id from this url 
-            db.collection('courses').doc(id).get().then(doc => {
-                document.getElementById('name').innerHTML += doc.data().name;
-            });
-            var users = db.collection('users');
-            // eslint-disable-next-line no-undef
-            firebase.auth().onAuthStateChanged((user) => {
+        	// eslint-disable-next-line no-undef
+        	const db = firebase.firestore();
+        	var myUrl = document.URL; // url of this page
+        	const id = myUrl.split('=')[1];  // get the post id from this url 
+        	db.collection('courses').doc(id).get().then(doc => {
+        		document.getElementById('name').innerHTML += doc.data().name;
+        	});
+        	var users = db.collection('users');
+        	// eslint-disable-next-line no-undef
+        	firebase.auth().onAuthStateChanged((user) => {
 
-                if (user) {
-                    // User is signed in, see docs for a list of available properties
-                    // https://firebase.google.com/docs/reference/js/firebase.User
+        		if (user) {
+        			// User is signed in, see docs for a list of available properties
+        			// https://firebase.google.com/docs/reference/js/firebase.User
 
-                    users.doc(user.uid).get().then((u) => {
-                        if (u.data().teacher) {
-                            document.getElementById('addq').style.display = 'block';
-                            document.getElementById('partition').style.display = 'block';
-                            document.getElementById('search-form').style.display = 'block';
-                            var part = document.getElementById('partition');
-                            part.addEventListener('click', function (e) {
-                                document.getElementById('partition').setAttribute('href', `partition.html?doc=${id}`);
-                            });
-                            var addquestionnaire = document.getElementById('addq');
-                            var questionnaireId;
-                            var questionId;
-                            addquestionnaire.addEventListener('click', function (e) {
-                                var questionnaire = db.collection('questionnaires');
-                                questionnaire.add({
-                                    courseId: id,
-                                    numOfQuestions: 0
-                                }).then(function (docRef) {
-                                    // successfully written
-                                    questionnaireId = docRef.id;
-                                    doOnlyWhen(() => {
-                                        db.collection("courses").doc(id).update({
-                                            questionnaires: firebase.firestore.FieldValue.arrayUnion(questionnaireId)
-                                        })
-                                    }, () => {
-                                        return (questionnaireId != undefined);
-                                    }, 500);
-                                });
-                                document.getElementById('numOfQ').style.display = 'block';
-                                document.getElementById('add-question').style.display = 'block';
-
-
-
-                                e.preventDefault();
-                            });
+        			users.doc(user.uid).get().then((u) => {
+        				if (u.data().teacher) {
+        					document.getElementById('addq').style.display = 'block';
+        					document.getElementById('partition').style.display = 'block';
+        					document.getElementById('search-form').style.display = 'block';
+        					var part = document.getElementById('partition');
+        					part.addEventListener('click', function () {
+        						document.getElementById('partition').setAttribute('href', `partition.html?doc=${id}`);
+        					});
+        					var addquestionnaire = document.getElementById('addq');
+        					var questionnaireId;
+        					var questionId;
+        					addquestionnaire.addEventListener('click', function (e) {
+        						var questionnaire = db.collection('questionnaires');
+        						questionnaire.add({
+        							courseId: id,
+        							numOfQuestions: 0
+        						}).then(function (docRef) {
+        							// successfully written
+        							questionnaireId = docRef.id;
+        							doOnlyWhen(() => {
+        								db.collection('courses').doc(id).update({
+        									questionnaires: firebase.firestore.FieldValue.arrayUnion(questionnaireId)
+        								});
+        							}, () => {
+        								return (questionnaireId != undefined);
+        							}, 500);
+        						});
+        						document.getElementById('numOfQ').style.display = 'block';
+        						document.getElementById('add-question').style.display = 'block';
 
 
-                            /*add question*/
-                            var addQuestion = document.getElementById('submit-new-question');
-                            var numOfQues = 0;
-                            addQuestion.addEventListener('click', function (e) {
-                                /*check null fields*/
-                                let newquestion = document.getElementById('new-question');
-                                let answer1 = document.getElementById('answer1');
-                                let answer2 = document.getElementById('answer2');
-                                let answer3 = document.getElementById('answer3');
-                                let answer4 = document.getElementById('answer4');
-                                if (!!(newquestion.value) && !!(answer1.value) && !!(answer2.value) && !!(answer3.value) && !!(answer4.value)) {
-                                    const answers = [answer1.value, answer2.value, answer3.value, answer4.value];
-                                    let questionDb = db.collection('questions');
-                                    questionDb.add({
-                                        question: newquestion.value,
-                                        answers: answers,
-                                        answer: $("input[type='radio'][name='Tcorrect-answer']:checked").val()
 
-                                    }).then(function (docRef) {
-                                        // successfully written
-                                        questionId = docRef.id;
-                                    });
-
-                                    doOnlyWhen(() => {
-                                        db.collection("questionnaires").doc(questionnaireId).get()
-                                            .then(doc => {
-                                                numOfQues = doc.data().numOfQuestions;
-                                                db.collection("questionnaires").doc(questionnaireId).update({
-                                                    questions: firebase.firestore.FieldValue.arrayUnion(questionId),
-                                                    numOfQuestions: (++numOfQues)
-                                                })
-                                                document.getElementById('numQ').innerText = numOfQues;
-                                                questionId = undefined;
-                                            });
-                                        alert('Question was added successfully');
-                                    }, () => {
-                                        return ((questionId != undefined) && (questionnaireId != undefined));
-                                    }, 500);
+        						e.preventDefault();
+        					});
 
 
-                                    newquestion.value = '';
-                                    answer1.value = '';
-                                    answer2.value = '';
-                                    answer3.value = '';
-                                    answer4.value = '';
+        					/*add question*/
+        					var addQuestion = document.getElementById('submit-new-question');
+        					var numOfQues = 0;
+        					addQuestion.addEventListener('click', function (e) {
+        						/*check null fields*/
+        						let newquestion = document.getElementById('new-question');
+        						let answer1 = document.getElementById('answer1');
+        						let answer2 = document.getElementById('answer2');
+        						let answer3 = document.getElementById('answer3');
+        						let answer4 = document.getElementById('answer4');
+        						if (!!(newquestion.value) && !!(answer1.value) && !!(answer2.value) && !!(answer3.value) && !!(answer4.value)) {
+        							const answers = [answer1.value, answer2.value, answer3.value, answer4.value];
+        							let questionDb = db.collection('questions');
+        							questionDb.add({
+        								question: newquestion.value,
+        								answers: answers,
+        								answer: $('input[type=\'radio\'][name=\'Tcorrect-answer\']:checked').val()
 
-                                }
-                                else {
-                                    alert('Error,Some filed is empty');
-                                }
+        							}).then(function (docRef) {
+        								// successfully written
+        								questionId = docRef.id;
+        							});
+
+        							doOnlyWhen(() => {
+        								db.collection('questionnaires').doc(questionnaireId).get()
+        									.then(doc => {
+        										numOfQues = doc.data().numOfQuestions;
+        										db.collection('questionnaires').doc(questionnaireId).update({
+        											questions: firebase.firestore.FieldValue.arrayUnion(questionId),
+        											numOfQuestions: (++numOfQues)
+        										});
+        										document.getElementById('numQ').innerText = numOfQues;
+        										questionId = undefined;
+        									});
+        								alert('Question was added successfully');
+        							}, () => {
+        								return ((questionId != undefined) && (questionnaireId != undefined));
+        							}, 500);
 
 
-                                e.preventDefault();
-                            });
+        							newquestion.value = '';
+        							answer1.value = '';
+        							answer2.value = '';
+        							answer3.value = '';
+        							answer4.value = '';
 
-                        } else {/*for student*/
-                            getAllQuestionnairs();
-                        }
-                    });
+        						}
+        						else {
+        							alert('Error,Some filed is empty');
+        						}
 
-                } else {
-                    // User is signed out
-                    location.href = '/';  // refresh the page
-                }
 
-                // logout button
-                let logoutBtn = document.getElementById('logout');
+        						e.preventDefault();
+        					});
 
-                logoutBtn.addEventListener('click', function () {
-                    // eslint-disable-next-line no-undef
-                    firebase.auth().signOut()
-                        .then(function () {
-                            // Sign-out successful.
-                            location.href = '/';
-                        })
-                        .catch(function (error) {
-                            console.log(error);// An error happened
-                        });
-                });
+        				} else {/*for student*/
+        					getAllQuestionnairs();
+        				}
+        			});
 
-                const searchButton = document.getElementById('search-btn');
-                searchButton.addEventListener('click', async (e) => {
-                    var search = document.getElementById('search').value.trim().toLowerCase();
-                    e.preventDefault();
-                    document.getElementById('search-result').innerHTML = '';
+        		} else {
+        			// User is signed out
+        			location.href = '/';  // refresh the page
+        		}
 
-                    if (search == '')
-                        return;
-                    else {  // add post to database
-                        var strlength = search.length;
-                        var strFrontCode = search.slice(0, strlength - 1);
-                        var strEndCode = search.slice(strlength - 1, search.length);
+        		// logout button
+        		let logoutBtn = document.getElementById('logout');
 
-                        var startcode = search;
-                        var endcode = strFrontCode + String.fromCharCode(strEndCode.charCodeAt(0) + 1);
+        		logoutBtn.addEventListener('click', function () {
+        			// eslint-disable-next-line no-undef
+        			firebase.auth().signOut()
+        				.then(function () {
+        					// Sign-out successful.
+        					location.href = '/';
+        				})
+        				.catch(function (error) {
+        					console.log(error);// An error happened
+        				});
+        		});
 
-                        var result = db.collection('users').where('nameUpper', '>=', startcode.toUpperCase())
-                            .where('nameUpper', '<', endcode.toUpperCase()).where('teacher', '==', false);
-                        await result.get().then((querySnapshot) => {  // for each post
-                            querySnapshot.forEach(async (doc) => {
+        		const searchButton = document.getElementById('search-btn');
+        		searchButton.addEventListener('click', async (e) => {
+        			var search = document.getElementById('search').value.trim().toLowerCase();
+        			e.preventDefault();
+        			document.getElementById('search-result').innerHTML = '';
 
-                                // if the user was found already got a request from this teacher display to hom a sent state
-                                var requests = await db.collection('requests').where('from', '==', user.uid).where('course', '==', id).where('to', '==', doc.id).get();
+        			if (search == '')
+        				return;
+        			else {  // add post to database
+        				var strlength = search.length;
+        				var strFrontCode = search.slice(0, strlength - 1);
+        				var strEndCode = search.slice(strlength - 1, search.length);
 
-                                if (!requests.empty) {
-                                    document.getElementById('search-result').innerHTML += `<div id='${doc.id}' style=" background-color:white;
+        				var startcode = search;
+        				var endcode = strFrontCode + String.fromCharCode(strEndCode.charCodeAt(0) + 1);
+
+        				var result = db.collection('users').where('nameUpper', '>=', startcode.toUpperCase())
+        					.where('nameUpper', '<', endcode.toUpperCase()).where('teacher', '==', false);
+        				await result.get().then((querySnapshot) => {  // for each post
+        					querySnapshot.forEach(async (doc) => {
+
+        						// if the user was found already got a request from this teacher display to hom a sent state
+        						var requests = await db.collection('requests').where('from', '==', user.uid).where('course', '==', id).where('to', '==', doc.id).get();
+
+        						if (!requests.empty) {
+        							document.getElementById('search-result').innerHTML += `<div id='${doc.id}' style=" background-color:white;
                                     width:fit-content; padding: 5px; border-style: groove; border-radius: 3px; margin-top: 3px;">
                                     <a>${doc.data().name}</a></br>
                                     <a>${doc.data().email}</a>
@@ -297,9 +297,9 @@
                                         firebase.firestore().collection('requests').doc(req.id).delete(); }); });
                                     
                                     document.getElementById('${doc.id}').style.display = 'none';">Cancel Request</button></div >`;
-                                } else {
-                                    // req.data() will be undefined in this case
-                                    document.getElementById('search-result').innerHTML += `<div id='send-${doc.id}' style=" background-color:white; width:fit-content;
+        						} else {
+        							// req.data() will be undefined in this case
+        							document.getElementById('search-result').innerHTML += `<div id='send-${doc.id}' style=" background-color:white; width:fit-content;
                                      padding: 5px; border-style: groove; border-radius: 3px; margin-top: 3px;">
                                     <a>${doc.data().name}</a></br>
                                     <a>${doc.data().email}</a>
@@ -307,25 +307,25 @@
                                      to: '${doc.id}', course:'${id}' });
                                      document.getElementById('send-${doc.id}').style.display = 'none' " >Send Request</button>
                                      </div >`;
-                                }
-                            });
-                        });
-                    }
-                });
-                async function getAllQuestionnairs() {
+        						}
+        					});
+        				});
+        			}
+        		});
+        		async function getAllQuestionnairs() {
 
-                    await db.collection('courses').where('students', 'array-contains', user.uid).get().then((querySnapshot) => {
-                        querySnapshot.forEach((doc) => {
-                            if ((doc.data().name) == document.getElementById('name').innerText) {
-                                doc.data().questionnaires.forEach(function callback(value, index) {
-                                    document.getElementById('questionnaires').innerHTML += `<a href="questionnaire.html?questionnaireId=${value}=${doc.data().name}" style="color: white;">questionnaire ${index + 1}</a></br> `;
+        			await db.collection('courses').where('students', 'array-contains', user.uid).get().then((querySnapshot) => {
+        				querySnapshot.forEach((doc) => {
+        					if ((doc.data().name) == document.getElementById('name').innerText) {
+        						doc.data().questionnaires.forEach(function callback(value, index) {
+        							document.getElementById('questionnaires').innerHTML += `<a href="questionnaire.html?questionnaireId=${value}=${doc.id}" style="color: white;">questionnaire ${index + 1}</a></br> `;
 
-                                });
-                            }
-                        });
-                    });
-                }
-            });
+        						});
+        					}
+        				});
+        			});
+        		}
+        	});
         });
 
         /**
@@ -338,22 +338,22 @@
          * @return {void}
          */
         doOnlyWhen = function (toDoHandler, toCheckHandler, interval, times, failHandler) {
-            if ((!toDoHandler) || (!toCheckHandler)) return;
-            if (typeof interval == "undefined") interval = 1000;
-            if (typeof times == "undefined") times = 20;
+        	if ((!toDoHandler) || (!toCheckHandler)) return;
+        	if (typeof interval == 'undefined') interval = 1000;
+        	if (typeof times == 'undefined') times = 20;
 
-            if (--times < 0) {
-                if (typeof failHandler === 'function') {
-                    failHandler();
-                }
-                return;
-            }
-            if (toCheckHandler()) {
-                toDoHandler();
-                return;
-            }
+        	if (--times < 0) {
+        		if (typeof failHandler === 'function') {
+        			failHandler();
+        		}
+        		return;
+        	}
+        	if (toCheckHandler()) {
+        		toDoHandler();
+        		return;
+        	}
 
-            setTimeout(function () { doOnlyWhen(toDoHandler, toCheckHandler, interval, times, failHandler); }, interval);
+        	setTimeout(function () { doOnlyWhen(toDoHandler, toCheckHandler, interval, times, failHandler); }, interval);
         };
 
     </script>

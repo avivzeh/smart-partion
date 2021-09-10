@@ -81,160 +81,162 @@
 
     </div>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            var myUrl = document.URL; // url of this page
-            const questionnaireId = myUrl.split('=')[1];  // get the post id from this url 
-            const CourseName = myUrl.split('=')[2]
-            document.getElementById('name').innerHTML += CourseName;
-            const db = firebase.firestore();
-            var users = db.collection('users');
+        document.addEventListener('DOMContentLoaded', async function () {
+        	const db = firebase.firestore();
+        	var myUrl = document.URL; // url of this page
+        	const questionnaireId = myUrl.split('=')[1];  // get the post id from this url 
+        	const CourseId = myUrl.split('=')[2];
+        	document.getElementById('name').innerHTML += await db.collection('courses').doc(CourseId).get().then(c => c.data().name);
+            
+        	var users = db.collection('users');
 
-            firebase.auth().onAuthStateChanged((user) => {
+        	firebase.auth().onAuthStateChanged((user) => {
 
-                if (user) {
-                    // User is signed in, see docs for a list of available properties
-                    // https://firebase.google.com/docs/reference/js/firebase.User
-                    document.getElementById('home').style.display = 'block';
-                    var uid = user.uid;
-                    users.doc(uid).get().then((u) => {
-                        if (u.data().student == true) {
-                            getQuistionsId();
-                            var sendResult = document.getElementById('submit-Questionnaire');
-                            sendResult.addEventListener('click', function (e) {
-                                submit();
-                                e.preventDefault();
-                            });
-                        }
-                    });
+        		if (user) {
+        			// User is signed in, see docs for a list of available properties
+        			// https://firebase.google.com/docs/reference/js/firebase.User
+        			document.getElementById('home').style.display = 'block';
+        			var uid = user.uid;
+        			users.doc(uid).get().then((u) => {
+        				if (u.data().student == true) {
+        					getQuistionsId();
+        					var sendResult = document.getElementById('submit-Questionnaire');
+        					sendResult.addEventListener('click', function (e) {
+        						submit();
+        						e.preventDefault();
+        					});
+        				}
+        			});
 
-                }
-                async function getQuistionsId() {
-                    var count = 0, i = 0;
-                    var checkSolved = false;
-                    await db.collection('grades').where('student', '==', user.uid).get().then((querySnapshot) => {
-                        querySnapshot.forEach((doc) => {
-                            if (doc.data().questionnair == questionnaireId) {
-                                checkSolved = true;
-                            }
-                        });
-                    });
-                    await db.collection('questionnaires').get().then((querySnapshot) => {
-                        querySnapshot.forEach((doc) => {
-                            if (doc.id == questionnaireId) {
-                                doc.data().questions.forEach(element => {
-                                    getQuistion(element, checkSolved, i);
-                                    i++;
-                                });
-
-
-                            }
-                        });
-                    });
-                }
-
-                async function getQuistion(questionId, checkS, ind) {
-
-                    var resultsArr = [];
-                    if (checkS) {
-                        db.collection('grades').where('student', '==', user.uid).get().then((querySnapshot) => {
-                            querySnapshot.forEach((doc) => {
-                                if (doc.data().questionnair == questionnaireId) {
-                                    doc.data().results.forEach(function callback(value, index) {
-                                        resultsArr[index] = value.slice(-1)
-                                    });
-                                }
-                            });
-                        });
-                    }
-                    await db.collection('questions').get().then((querySnapshot) => {
-                        querySnapshot.forEach((doc) => {
-                            if (doc.id == questionId) {
-                                document.getElementById('questionForm').style.display = 'block'
-                                let ans = "";
-                                doc.data().answers.forEach(function callback(value, index) {
-                                    if (checkS) {
-                                        if (resultsArr[ind] == index) {
-                                            if (doc.data().answer == resultsArr[ind])
-                                                ans += '<input id=a' + doc.id + ' type="radio" name=' + doc.id + ' value = ' + index + ' checked> <label style="font-size: 20px;">' + (index + 1) + ')   </label> <label style="font-size: 20px;">' + value + '&#9989;</label><br>'
-                                            else
-                                                ans += '<input id=a' + doc.id + ' type="radio" name=' + doc.id + ' value = ' + index + ' checked> <label style="font-size: 20px;">' + (index + 1) + ')   </label> <label style="font-size: 20px;">' + value + '&#10060;</label><br>'
-
-                                        }
-                                        else
-                                            ans += '<input id=a' + doc.id + ' type="radio" name=' + doc.id + ' value = ' + index + ' disabled> <label style="font-size: 20px;">' + (index + 1) + ')   </label> <label style="font-size: 20px;">' + value + '</label><br>'
-
-                                    }
-                                    else {
-                                        if (index == 0)
-                                            ans += '<input id=a' + doc.id + ' type="radio" name=' + doc.id + ' value = ' + index + ' checked> <label style="font-size: 20px;">' + (index + 1) + ')   </label> <label style="font-size: 20px;">' + value + '</label><br>'
-                                        else
-                                            ans += '<input id=a' + doc.id + ' type="radio" name=' + doc.id + ' value = ' + index + ' > <label style="font-size: 20px;">' + (index + 1) + ')   </label> <label style="font-size: 20px;">' + value + '</label><br>'
-                                    }
-                                });
-                                var a = 'a';
-                                document.getElementById('questions').innerHTML += `<label id="question" style="font-size: 30px">${doc.data().question}</label><span id=${a}${doc.id}> </span>  <br>${ans}<hr style="border-color:white"><br>`
-
-                            }
+        		}else
+        			location.href = '/';
+        		async function getQuistionsId() {
+        			var i = 0;
+        			var checkSolved = false;
+        			await db.collection('grades').where('student', '==', user.uid).get().then((querySnapshot) => {
+        				querySnapshot.forEach((doc) => {
+        					if (doc.data().questionnair == questionnaireId) {
+        						checkSolved = true;
+        					}
+        				});
+        			});
+        			await db.collection('questionnaires').get().then((querySnapshot) => {
+        				querySnapshot.forEach((doc) => {
+        					if (doc.id == questionnaireId) {
+        						doc.data().questions.forEach(element => {
+        							getQuistion(element, checkSolved, i);
+        							i++;
+        						});
 
 
-                        });
+        					}
+        				});
+        			});
+        		}
 
-                    });
-                    if (checkS) {
-                        document.querySelector('h3').innerHTML = '&#9997; You already solved this questionnaire &#9997;'
-                        var sendResult = document.getElementById('submit-Questionnaire');
-                        sendResult.disabled = true;
-                    }
-                }
+        		async function getQuistion(questionId, checkS, ind) {
 
-                function submit() {
-                    var GradesId;
-                    db.collection('grades').add({
-                        questionnair: questionnaireId,
-                        student: uid
-                    }).then(function (docRef) {
-                        // successfully written
-                        GradesId = docRef.id;
-                    });
-                    doOnlyWhen(() => {
-                        db.collection('questionnaires').get().then((querySnapshot) => {
-                            querySnapshot.forEach((doc) => {
-                                if (doc.id == questionnaireId) {
-                                    doc.data().questions.forEach(element => {
-                                        db.collection('questions').get().then((querySnapshot) => {
-                                            querySnapshot.forEach((doc) => {
-                                                if (doc.id == element) {
-                                                    if (doc.data().answer == $("input[type='radio'][name='" + element + "']:checked").val()) {
-                                                        document.querySelector("span#a" + doc.id).innerHTML = "&#9989;";
-                                                        db.collection('grades').doc(GradesId).update({
-                                                            results: firebase.firestore.FieldValue.arrayUnion(doc.id + 'True' + $("input[type='radio'][name='" + element + "']:checked").val()),
-                                                        });
-                                                    }
-                                                    else {
-                                                        document.querySelector("span#a" + doc.id).innerHTML = "&#10060;";
-                                                        db.collection('grades').doc(GradesId).update({
-                                                            results: firebase.firestore.FieldValue.arrayUnion(doc.id + 'False' + $("input[type='radio'][name='" + element + "']:checked").val())
-                                                        });
-                                                    }
-                                                    document.querySelectorAll('input#a' + doc.id).forEach((ele) => {
-                                                        if (ele.checked == false)
-                                                            ele.disabled = true;
-                                                    });
-                                                }
-                                            });
-                                        })
-                                    });
+        			var resultsArr = [];
+        			if (checkS) {
+        				db.collection('grades').where('student', '==', user.uid).get().then((querySnapshot) => {
+        					querySnapshot.forEach((doc) => {
+        						if (doc.data().questionnair == questionnaireId) {
+        							doc.data().results.forEach(function callback(value, index) {
+        								resultsArr[index] = value.slice(-1);
+        							});
+        						}
+        					});
+        				});
+        			}
+        			await db.collection('questions').get().then((querySnapshot) => {
+        				querySnapshot.forEach((doc) => {
+        					if (doc.id == questionId) {
+        						document.getElementById('questionForm').style.display = 'block';
+        						let ans = '';
+        						doc.data().answers.forEach(function callback(value, index) {
+        							if (checkS) {
+        								if (resultsArr[ind] == index) {
+        									if (doc.data().answer == resultsArr[ind])
+        										ans += '<input id=a' + doc.id + ' type="radio" name=' + doc.id + ' value = ' + index + ' checked> <label style="font-size: 20px;">' + (index + 1) + ')   </label> <label style="font-size: 20px;">' + value + '&#9989;</label><br>';
+        									else
+        										ans += '<input id=a' + doc.id + ' type="radio" name=' + doc.id + ' value = ' + index + ' checked> <label style="font-size: 20px;">' + (index + 1) + ')   </label> <label style="font-size: 20px;">' + value + '&#10060;</label><br>';
+
+        								}
+        								else
+        									ans += '<input id=a' + doc.id + ' type="radio" name=' + doc.id + ' value = ' + index + ' disabled> <label style="font-size: 20px;">' + (index + 1) + ')   </label> <label style="font-size: 20px;">' + value + '</label><br>';
+
+        							}
+        							else {
+        								if (index == 0)
+        									ans += '<input id=a' + doc.id + ' type="radio" name=' + doc.id + ' value = ' + index + ' checked> <label style="font-size: 20px;">' + (index + 1) + ')   </label> <label style="font-size: 20px;">' + value + '</label><br>';
+        								else
+        									ans += '<input id=a' + doc.id + ' type="radio" name=' + doc.id + ' value = ' + index + ' > <label style="font-size: 20px;">' + (index + 1) + ')   </label> <label style="font-size: 20px;">' + value + '</label><br>';
+        							}
+        						});
+        						var a = 'a';
+        						document.getElementById('questions').innerHTML += `<label id="question" style="font-size: 30px">${doc.data().question}</label><span id=${a}${doc.id}> </span>  <br>${ans}<hr style="border-color:white"><br>`;
+
+        					}
 
 
-                                }
-                            });
-                        });
-                    }, () => {
-                        return ((GradesId != undefined));
-                    }, 500);
-                }
+        				});
 
-            });
+        			});
+        			if (checkS) {
+        				document.querySelector('h3').innerHTML = '&#9997; You already solved this questionnaire &#9997;';
+        				var sendResult = document.getElementById('submit-Questionnaire');
+        				sendResult.disabled = true;
+        			}
+        		}
+
+        		function submit() {
+        			var GradesId;
+        			db.collection('grades').add({
+        				questionnair: questionnaireId,
+        				student: uid
+        			}).then(function (docRef) {
+        				// successfully written
+        				GradesId = docRef.id;
+        			});
+        			doOnlyWhen(() => {
+        				db.collection('questionnaires').get().then((querySnapshot) => {
+        					querySnapshot.forEach((doc) => {
+        						if (doc.id == questionnaireId) {
+        							doc.data().questions.forEach(element => {
+        								db.collection('questions').get().then((querySnapshot) => {
+        									querySnapshot.forEach((doc) => {
+        										if (doc.id == element) {
+        											if (doc.data().answer == $('input[type=\'radio\'][name=\'' + element + '\']:checked').val()) {
+        												document.querySelector('span#a' + doc.id).innerHTML = '&#9989;';
+        												db.collection('grades').doc(GradesId).update({
+        													results: firebase.firestore.FieldValue.arrayUnion(doc.id + 'True' + $('input[type=\'radio\'][name=\'' + element + '\']:checked').val()),
+        												});
+        											}
+        											else {
+        												document.querySelector('span#a' + doc.id).innerHTML = '&#10060;';
+        												db.collection('grades').doc(GradesId).update({
+        													results: firebase.firestore.FieldValue.arrayUnion(doc.id + 'False' + $('input[type=\'radio\'][name=\'' + element + '\']:checked').val())
+        												});
+        											}
+        											document.querySelectorAll('input#a' + doc.id).forEach((ele) => {
+        												if (ele.checked == false)
+        													ele.disabled = true;
+        											});
+        										}
+        									});
+        								});
+        							});
+
+
+        						}
+        					});
+        				});
+        			}, () => {
+        				return ((GradesId != undefined));
+        			}, 500);
+        		}
+
+        	});
         });
 
 
@@ -249,22 +251,22 @@
          * @return {void}
          */
         doOnlyWhen = function (toDoHandler, toCheckHandler, interval, times, failHandler) {
-            if ((!toDoHandler) || (!toCheckHandler)) return;
-            if (typeof interval == "undefined") interval = 1000;
-            if (typeof times == "undefined") times = 20;
+        	if ((!toDoHandler) || (!toCheckHandler)) return;
+        	if (typeof interval == 'undefined') interval = 1000;
+        	if (typeof times == 'undefined') times = 20;
 
-            if (--times < 0) {
-                if (typeof failHandler === 'function') {
-                    failHandler();
-                }
-                return;
-            }
-            if (toCheckHandler()) {
-                toDoHandler();
-                return;
-            }
+        	if (--times < 0) {
+        		if (typeof failHandler === 'function') {
+        			failHandler();
+        		}
+        		return;
+        	}
+        	if (toCheckHandler()) {
+        		toDoHandler();
+        		return;
+        	}
 
-            setTimeout(function () { doOnlyWhen(toDoHandler, toCheckHandler, interval, times, failHandler); }, interval);
+        	setTimeout(function () { doOnlyWhen(toDoHandler, toCheckHandler, interval, times, failHandler); }, interval);
         };
 
     </script>
