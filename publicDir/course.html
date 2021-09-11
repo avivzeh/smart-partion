@@ -132,7 +132,7 @@
         	// eslint-disable-next-line no-undef
         	const db = firebase.firestore();
         	var myUrl = document.URL; // url of this page
-        	const id = myUrl.split('=')[1];  // get the post id from this url 
+        	const id = myUrl.split('=')[1];  // get the course id from this url 
         	db.collection('courses').doc(id).get().then(doc => {
         		document.getElementById('name').innerHTML += doc.data().name;
         	});
@@ -278,15 +278,29 @@
         				var endcode = strFrontCode + String.fromCharCode(strEndCode.charCodeAt(0) + 1);
 
         				var result = db.collection('users').where('nameUpper', '>=', startcode.toUpperCase())
-        					.where('nameUpper', '<', endcode.toUpperCase()).where('teacher', '==', false);
-        				await result.get().then((querySnapshot) => {  // for each post
-        					querySnapshot.forEach(async (doc) => {
+        					.where('nameUpper', '<', endcode.toUpperCase()).where('teacher', '==', false); // just students
+        				await result.get().then((querySnapshot) => {  
+        					querySnapshot.forEach(async (doc) => {  // for each student
 
         						// if the user was found already got a request from this teacher display to hom a sent state
         						var requests = await db.collection('requests').where('from', '==', user.uid).where('course', '==', id).where('to', '==', doc.id).get();
+								let isStudentInThisCourse = await db.collection('courses').doc(id).get().then( thisCourse => {
+									for(let student of thisCourse.data().students)
+										if(student == doc.id)
+											return true;
+									return false;
+								});
+								if(isStudentInThisCourse){
 
-        						if (!requests.empty) {
-        							document.getElementById('search-result').innerHTML += `<div id='${doc.id}' style=" background-color:white;
+									document.getElementById('search-result').innerHTML += `<div id='${doc.id}' style=" background-color:white;
+											width:fit-content; padding: 5px; border-style: groove; border-radius: 3px; margin-top: 3px;">
+											<a>${doc.data().name}</a></br>
+											<a>${doc.data().email}</a>
+											<a style="margin-left: 5px;">registered </a></div >`;
+								}
+						else{
+        							if (!requests.empty) {
+        								document.getElementById('search-result').innerHTML += `<div id='${doc.id}' style=" background-color:white;
                                     width:fit-content; padding: 5px; border-style: groove; border-radius: 3px; margin-top: 3px;">
                                     <a>${doc.data().name}</a></br>
                                     <a>${doc.data().email}</a>
@@ -296,9 +310,9 @@
                                         firebase.firestore().collection('requests').doc(req.id).delete(); }); });
                                     
                                     document.getElementById('${doc.id}').style.display = 'none';">Cancel Request</button></div >`;
-        						} else {
+        							} else {
         							// req.data() will be undefined in this case
-        							document.getElementById('search-result').innerHTML += `<div id='send-${doc.id}' style=" background-color:white; width:fit-content;
+        								document.getElementById('search-result').innerHTML += `<div id='send-${doc.id}' style=" background-color:white; width:fit-content;
                                      padding: 5px; border-style: groove; border-radius: 3px; margin-top: 3px;">
                                     <a>${doc.data().name}</a></br>
                                     <a>${doc.data().email}</a>
@@ -306,7 +320,8 @@
                                      to: '${doc.id}', course:'${id}' });
                                      document.getElementById('send-${doc.id}').style.display = 'none' " >Send Request</button>
                                      </div >`;
-        						}
+        							}
+						}
         					});
         				});
         			}

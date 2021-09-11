@@ -383,16 +383,32 @@
 
 						var result = db.collection('courses').where('nameUpper', '>=', startcode.toUpperCase())
 							.where('nameUpper', '<', endcode.toUpperCase());
-						await result.get().then((querySnapshot) => {  // for each post
-							querySnapshot.forEach(async (course) => {
+						await result.get().then((querySnapshot) => {
+							querySnapshot.forEach(async (course) => { // for each course
 
 								// if the teacher was found already got a request from this teacher display to him a sent state
 								var requests = await db.collection('requests').where('from', '==', user.uid).where('to', '==', course.data().teacher).
 									where('course', '==', course.id).get();
-
-								if (!requests.empty) { // request was sent for this course
+								let isUserInThisCourse = await db.collection('courses').doc(course.id).get().then(c => {
+									for (let student of c.data().students)
+										if (student == user.uid)
+											return true;
+									return false;
+								});
+								if (isUserInThisCourse) {
 									db.collection('users').doc(course.data().teacher).get().then(u => {  // get the teacher
 										document.getElementById('search-result').innerHTML += `<div id='${course.id}' style=" background-color:white;
+											width:fit-content; padding: 5px; border-style: groove; border-radius: 3px; margin-top: 3px;">
+											<a>${course.data().name}</a></br>
+											<a>Teacher: ${u.data().name}</a></br>
+											<a>${u.data().email}</a>
+											<a style="margin-left: 5px;">registered </a></div >`;
+									});
+								} else {
+
+									if (!requests.empty) { // request was sent for this course
+										db.collection('users').doc(course.data().teacher).get().then(u => {  // get the teacher
+											document.getElementById('search-result').innerHTML += `<div id='${course.id}' style=" background-color:white;
 										width:fit-content; padding: 5px; border-style: groove; border-radius: 3px; margin-top: 3px;">
 										<a>${course.data().name}</a></br> 
 										<a>Teacher: ${u.data().name}</a></br>
@@ -403,12 +419,12 @@
 											firebase.firestore().collection('requests').doc(req.id).delete(); }); });
 										
 										document.getElementById('${course.id}').style.display = 'none';">Cancel Request</button></div >`;
-									});
+										});
 
-								} else {
-									// req.data() will be undefined in this case
-									db.collection('users').doc(course.data().teacher).get().then(u => {  // get the teacher
-										document.getElementById('search-result').innerHTML += `<div id='${course.id}' style=" background-color:white;
+									} else {
+										// req.data() will be undefined in this case
+										db.collection('users').doc(course.data().teacher).get().then(u => {  // get the teacher
+											document.getElementById('search-result').innerHTML += `<div id='${course.id}' style=" background-color:white;
 										width:fit-content; padding: 5px; border-style: groove; border-radius: 3px; margin-top: 3px;">
 										<a>${course.data().name}</a></br> 
 										<a>Teacher: ${u.data().name}</a></br>
@@ -417,7 +433,8 @@
                                     	to: '${course.data().teacher}', course:'${course.id}' });
 										
 										document.getElementById('${course.id}').style.display = 'none';">Send Request</button></div >`;
-									});
+										});
+									}
 								}
 							});
 						});
