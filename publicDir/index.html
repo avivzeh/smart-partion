@@ -73,15 +73,13 @@
 			</div>
 		</div>
 		<div>
-			<button type="submit" id="show-courses" class="btn-group-toggle" style="display: none;">Show/Hide All
+			<button type="submit" id="show-courses" class="btn-group-toggle btn btn-primary" style="display: none; margin-top: 10px; background-color: black;">Show/Hide All
 				Courses</button>
 		</div>
 		<div id="header">
 			<p id="welcome"></p>
 			<div id="loader">Loading...</div>
 		</div>
-
-
 
 		<div id="firebaseui-auth-container" style="display: none;"></div>
 
@@ -101,7 +99,6 @@
 			</div>
 		</div>
 
-
 		<div id="All" class="row mx-auto" style="display: inline; ">
 			<div class="row mt-2">
 				<div class="col-12 ">
@@ -110,13 +107,12 @@
 						<div id="Allcourses" class="form-group" style="margin-top: 10px; color: wheat; ">
 
 						</div>
-						<div style="display:flex;">
-							<button type="submit" id="choose-course" class="btn btn-primary">Choose Course</button>
-						</div>
 					</form>
 				</div>
 			</div>
 		</div>
+
+		<div id="search-result" class="row mx-auto" style="display: inline; "></div>
 
 		<div>
 			<h1 id="courses-header" style="display: none;">My Courses </h1>
@@ -137,8 +133,6 @@
 				</form>
 			</div>
 		</div>
-
-		<div id="search-result" class="row mx-auto" style="display: inline; "></div>
 
 		<div id="courses" class="row mx-auto" style="display: inline; "></div>
 
@@ -228,18 +222,6 @@
 								});
 								getCoursesForStudent();
 
-
-								var chooseCourse = document.getElementById('choose-course');
-								chooseCourse.addEventListener('click', function (e) {
-									if ($('input[type=\'radio\'][name=\'courseChoosen\']:checked').val()) {
-										db.collection('courses').doc($('input[type=\'radio\'][name=\'courseChoosen\']:checked').val()).update({
-											students: firebase.firestore.FieldValue.arrayUnion(uid)
-										});
-									}
-									else
-										e.preventDefault();
-								});
-
 							}
 							getRequests();
 						} else {  // first login
@@ -304,6 +286,7 @@
 						document.getElementById('courses-header').style.display = 'block';
 						// eslint-disable-next-line no-undef
 						$('#invalid').hide();
+						location.href = '/'; //refresh
 					}
 					else {
 						if (document.getElementById('teacher').checked == true) {
@@ -324,6 +307,7 @@
 							document.getElementById('courses-header').style.display = 'block';
 							// eslint-disable-next-line no-undef
 							$('#invalid').hide();
+							location.href = '/'; //refresh
 						}
 						else {
 							// eslint-disable-next-line no-undef
@@ -413,7 +397,7 @@
 										<a>${course.data().name}</a></br> 
 										<a>Teacher: ${u.data().name}</a></br>
 										<a>${u.data().email}</a>
-										<button style="margin-left: 5px;" onclick="firebase.firestore().collection('requests')
+										<button style="margin-left: 5px;" class="btn btn-primary" onclick="firebase.firestore().collection('requests')
 										.where('from', '==', '${user.uid}').where('course', '==', '${course.id}').where('to', '==', '${course.data().teacher}').get().then((querySnapshot) => { 
 											querySnapshot.forEach((req) => {
 											firebase.firestore().collection('requests').doc(req.id).delete(); }); });
@@ -429,7 +413,7 @@
 										<a>${course.data().name}</a></br> 
 										<a>Teacher: ${u.data().name}</a></br>
 										<a>${u.data().email}</a>
-										<button style="margin-left: 5px;" onclick="firebase.firestore().collection('requests').add({ from: '${user.uid}',
+										<button style="margin-left: 5px;" class="btn btn-primary" onclick="firebase.firestore().collection('requests').add({ from: '${user.uid}',
                                     	to: '${course.data().teacher}', course:'${course.id}' });
 										
 										document.getElementById('${course.id}').style.display = 'none';">Send Request</button></div >`;
@@ -444,9 +428,9 @@
 				async function getAllCourses() {
 					document.getElementById('Allcourses').innerHTML = '';
 					await db.collection('courses').get().then((querySnapshot) => {
-						querySnapshot.forEach((doc) => {
-							document.getElementById('Allcourses').innerHTML += `<input type="radio" name="courseChoosen" value="${doc.id}">
-							<label for="${doc.data().name}">${doc.data().name}</label><br>`;
+						querySnapshot.forEach( async (doc) => {
+							let teacher = await db.collection('users').doc(doc.data().teacher).get().then( t => t.data().name);
+							document.getElementById('Allcourses').innerHTML += `<label>${doc.data().name} - ${teacher}</label><br>`;
 						});
 					});
 				}
@@ -484,7 +468,7 @@
                                     <a>${u.data().email}</a>
 									<p>For Joinning To: ${c.data().name} </p>
 									<div style=" display: flex; padding: 5px; border-style: groove; border-radius: 3px; margin-top: 3px;">
-                                    <button id='send-${u.id}' style="margin-left: 5px;" onclick="
+                                    <button id='send-${u.id}' class="btn btn-primary" style="margin-left: 5px;" onclick="
 									if(${u.data().student})
 									firebase.firestore().collection('courses').doc('${req.data().course}')
 									 .update({ students: firebase.firestore.FieldValue.arrayUnion('${u.id}')});
@@ -493,7 +477,7 @@
 									 .update({ students: firebase.firestore.FieldValue.arrayUnion('${user.uid}')});
 									 firebase.firestore().collection('requests').doc('${req.id}').delete();
                                      document.getElementById('${req.id}').style.display = 'none'; " >Accept</button>
-									 <button id='send-${u.id}' style="margin-left: 5px;" onclick="
+									 <button id='send-${u.id}' class="btn btn-primary" style="margin-left: 5px;" onclick="
 									 firebase.firestore().collection('requests').doc('${req.id}').delete();
                                      document.getElementById('${req.id}').style.display = 'none'; ">Decline</button>
                                      </div>`;
