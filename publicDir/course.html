@@ -304,7 +304,7 @@
                                     width:fit-content; padding: 5px; border-style: groove; border-radius: 3px; margin-top: 3px;">
                                     <a>${doc.data().name}</a></br>
                                     <a>${doc.data().email}</a>
-                                    <button style="margin-left: 5px;" onclick="firebase.firestore().collection('requests')
+                                    <button style="margin-left: 5px;" class="btn btn-primary" onclick="firebase.firestore().collection('requests')
                                     .where('from', '==', '${user.uid}').where('course', '==', '${id}').where('to', '==', '${doc.id}').get().then((querySnapshot) => { 
                                         querySnapshot.forEach((req) => {
                                         firebase.firestore().collection('requests').doc(req.id).delete(); }); });
@@ -316,7 +316,7 @@
                                      padding: 5px; border-style: groove; border-radius: 3px; margin-top: 3px;">
                                     <a>${doc.data().name}</a></br>
                                     <a>${doc.data().email}</a>
-                                    <button style="margin-left: 5px;" onclick="firebase.firestore().collection('requests').add({ from: '${user.uid}',
+                                    <button style="margin-left: 5px;" class="btn btn-primary" onclick="firebase.firestore().collection('requests').add({ from: '${user.uid}',
                                      to: '${doc.id}', course:'${id}' });
                                      document.getElementById('send-${doc.id}').style.display = 'none' " >Send Request</button>
                                      </div >`;
